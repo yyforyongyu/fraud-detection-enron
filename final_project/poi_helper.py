@@ -4,9 +4,50 @@
     A helper library for poi_id.py
 """
 
+from feature_format import featureFormat, targetFeatureSplit
 from sklearn.grid_search import GridSearchCV
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 from sklearn.cross_validation import train_test_split
+from sklearn.pipeline import Pipeline
+import numpy as np
+
+def outlierCleaner(predictions, features, labels):
+    """
+        clean away the 10% of points that have the largest
+        residual errors (different between the prediction
+        and the actual label value)
+
+        return two lists - normals and outliers. Outliers
+        are data points with the top 10% largest residual
+        errors, the rest are in normals. Both of the lists
+        are formatted as numpy array, and exactly like the
+        formats after calling featureFormat.
+    """
+
+    normals = []
+    outliers = []
+    data = []
+    length = int(len(predictions) * 0.9) + 1 # define the number of data points to be kept in normals
+
+    ### create a dataset with a format:
+    ### tuple(feature, label, residual errors)
+    for i in range(len(predictions)):
+        result = features[i], labels[i], (labels[i] - predictions[i]) ** 2
+        data.append(tuple(result))
+
+    ### sort dataset by deviations
+    data.sort(key=lambda value: value[2])
+
+    ### access dataset and create normals and outliers
+    count = 0
+    for values in data:
+        count += 1
+        if count <= length:
+            normals.append(np.append([values[1]],values[0]))
+        else:
+            outliers.append(np.append([values[1]],values[0]))
+
+    return normals, outliers
 
 def featureReformat(numpy_array, features):
     """
@@ -30,7 +71,7 @@ def featureReformat(numpy_array, features):
 
     return result
 
-def personMapping(dict_list, dataset):
+def personMapping(dict_list, dataset, features_list):
     """
         Mapping a person's name based on the values of
         features.
@@ -145,7 +186,7 @@ def tuneEstimator(pipeline, param, features_train, features_test, labels_train):
     labels_pred = best_clf.predict(features_test)
     return best_clf, labels_pred, tuned_scores
 
-def trainModel(my_dataset, features_list, feature_selection=feature_selection, classifiers=classifiers):
+def trainModel(my_dataset, features_list, feature_selection, classifiers):
     """
         A model training function.
 
