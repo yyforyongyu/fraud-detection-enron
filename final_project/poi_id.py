@@ -91,13 +91,18 @@ from sklearn.decomposition import PCA
 feature_selection = [('k_best', SelectKBest(k = 5)),
                      ('linear_svc_l1', LinearSVC(C=0.01, penalty="l1", dual=False, random_state=31)),
                      ('logistic_reg', RandomizedLogisticRegression(C=1, selection_threshold=0.01, random_state=31)),
-                     ('extra_tree', ExtraTreesClassifier(max_features=5, random_state=31)),
-                     ('pca', PCA(n_components=5))]
+                     ('extra_tree', ExtraTreesClassifier(max_features=5, random_state=31))]
 
 from sklearn.pipeline import FeatureUnion, Pipeline
-combined_feature = FeatureUnion(feature_selection)
+### combine pca to feature selection
+combined_feature = []
+for method in feature_selection:
+    new_method = FeatureUnion([('pca', PCA(n_components=5)), method])
+    name = method[0] + "_with_pca"
+    combined_feature.append((name, new_method))
 
-feature_selection = feature_selection + [('combined_feature', combined_feature)]
+### update feature selection list
+feature_selection += combined_feature
 
 ### Task 4: Try a varity of classifiers
 linear_svc = LinearSVC(random_state=31, dual=False)
@@ -134,13 +139,13 @@ classifiers = [('linear_svc', linear_svc, params_svc),
 ### function. Because of the small size of the dataset, the script uses
 ### stratified shuffle split cross validation. For more info:
 ### http://scikit-learn.org/stable/modules/generated/sklearn.cross_validation.StratifiedShuffleSplit.html
-cleaned_model_sets, tuned_score_2 = trainModel(my_cleaned_dataset, features_list, feature_selection, classifiers)
 
+cleaned_model_sets_scaled, tuned_score_2 = trainModel(my_cleaned_dataset, features_list, scaling=True)
 ### Task 6: Dump your classifier, dataset, and features_list so anyone can
 ### check your results. You do not need to change anything below, but make sure
 ### that the version of poi_id.py that you submit can be run on its own and
 ### generates the necessary .pkl files for validating your results.
-clf = pipeline_pca_linearsvc = cleaned_model_sets[9][1]
+clf = pipeline_pca_linearsvc = cleaned_model_sets_scaled[0][1]
 my_dataset = my_cleaned_dataset
 
 dump_classifier_and_data(clf, my_dataset, features_list)

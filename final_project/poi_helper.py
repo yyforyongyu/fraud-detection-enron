@@ -156,18 +156,20 @@ def evaluateModel(y_true, y_pred):
         Calculate the model's accuracy score, f1 score,
         precision score, and recall score.
 
-        Return nothing. Print out the scores as side effects.
+        Return scores and print out the scores as side effects.
     """
 
-    accuracy = accuracy_score(y_true, y_pred)
-    f1 = f1_score(y_true, y_pred)
-    precision = precision_score(y_true, y_pred)
-    recall = recall_score(y_true, y_pred)
+    accuracy = round(accuracy_score(y_true, y_pred), 3)
+    f1 = round(f1_score(y_true, y_pred), 3)
+    precision = round(precision_score(y_true, y_pred), 3)
+    recall = round(recall_score(y_true, y_pred), 3)
 
     print """    Accuracy score: {}
     F1 score: {}
     Precision score: {}
     Recall score: {}""".format(accuracy, f1, precision, recall)
+
+    return accuracy, f1, precision, recall
 
 def tuneEstimator(pipeline, param, features_train, features_test, labels_train):
     """
@@ -186,7 +188,7 @@ def tuneEstimator(pipeline, param, features_train, features_test, labels_train):
     labels_pred = best_clf.predict(features_test)
     return best_clf, labels_pred, tuned_scores
 
-def trainModel(my_dataset, features_list, feature_selection, classifiers):
+def trainModel(my_dataset, features_list, feature_selection, classifiers, scaling=False):
     """
         A model training function.
 
@@ -199,7 +201,12 @@ def trainModel(my_dataset, features_list, feature_selection, classifiers):
         the model based on accuracy score, precision score,
         recall score, and f1 score.
 
-        Return a list of models and tuned scores.
+        If scaling is True, it will scale features only when
+        appropriate classifiers are used. If scaling_all is True,
+        it will scale features for all classifiers.
+
+        Return a list of models and tuned scores, and writes a csv
+        file to store the results.
     """
 
     ### split the training and testing sets
@@ -208,36 +215,121 @@ def trainModel(my_dataset, features_list, feature_selection, classifiers):
     trained_model = []
     count = 0
     tuned_score = []
+    model_results = []
+
     ### iter through feature selection and classification methods
     for selection_method in feature_selection:
         for item in classifiers:
+
             count += 1
-            print "Model {} \n-working on classifier {}, using slection method {}".format(count, item[0], selection_method[0])
+            print "Model {} \n-working on classifier {}, using slection method {}".format(count, item[0],
+                                                                                          selection_method[0])
+
             ### add a time function to calculate time used by each model
             from time import time
             t0 = time()
+
             ### unpack name, function and parameters
             classifier = item[:2]
             param = item[2]
+
+            ### scale the features before training
+            if scaling:
+                features_train = MinMaxScaler().fit_transform(features_train)
+                features_test = MinMaxScaler().fit_transform(features_test)
+
             try:
+
                 ### build pipeline
                 pipeline = Pipeline([selection_method, classifier[:2]])
+
                 ### tune the model
                 try:
+
                     print "--start tuning..."
-                    clf, labels_pred, grid_scores = tuneEstimator(pipeline, param, features_train, features_test, labels_train)
+                    clf, labels_pred, grid_scores = tuneEstimator(pipeline, param, features_train,
+                                                                  features_test, labels_train)
+
                     ### store the tuning results
                     tuned_score.append(grid_scores)
+
                     ### store model's information, including name, function, and parameters
                     model_name = item[0] + " with " + selection_method[0]
                     model_info = (model_name, clf)
                     trained_model.append(model_info)
-                    print "--training on {} complete, time used {}".format(model_name, time() - t0)
+
+                    time_used = time() - t0
+                    print "--training on {} complete, time used {}".format(model_name, time_used)
+
                     ### print out evaluation scores
-                    evaluateModel(labels_test, labels_pred)
+                    accuracy, f1, precision, recall = evaluateModel(labels_test, labels_pred)
+
+                    ### check the which dataset
+                    if len(my_dataset) > 140:
+                        cleaned = False
+                    else:
+                        cleaned = True
+                    ### store the information of models
+                    model_results.append((cleaned, count, scaling, selection_method[0], item[0], accuracy, f1,
+                           precision, recall, round(time_used, 3)))
                     print ""
+
                 except Exception, e:
                     print "--error on tuning: \n", e, "\n"
+
             except Exception, e:
                 print "-error on classifying: \n", e, "\n"
+
+    ### dump the model information into a csv file
+    dumpResult(model_results)
+
     return trained_model, tuned_score
+
+def dumpResult(data):
+    """
+        Take the results from running models and dump
+        into a csv file named "result.csv"
+    """
+    import csv
+    import os
+
+    ordered_data = findBest(data)
+
+    file_exists = os.path.isfile("result.csv")
+
+    with open("result.csv", "a") as f:
+        writer = csv.writer(f)
+
+        ### write row for a new file
+        if not file_exists:
+            writer.writerow(["cleaned", "model", "scaled", "feature_selection_method",
+                             "classification_method", "accuracy_score", "f1_score",
+                             "precision_score", "recall_score", "time_used"])
+
+        for model in ordered_data:
+            writer.writerow(model)
+
+def findBest(data):
+    """
+        Take the results from running models and reorder
+        the data first by its scores then by its runtime.
+
+        Return a list of reordered data.
+    """
+
+    ordered_data = []
+
+    ### find the biggest accuracy score
+    accuracy = max(data, key=lambda value:value[5])[5]
+
+    ### exclude model that has lower accuracy scores
+    for model in data:
+        if model[5] < accuracy:
+            pass
+        else:
+            ordered_data.append(model)
+
+    ### order by runtime
+    ordered_data.sort(key=lambda value:value[-1])
+
+    return ordered_data
