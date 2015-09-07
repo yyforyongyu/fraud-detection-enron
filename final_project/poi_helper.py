@@ -71,7 +71,7 @@ def outlierCleaner(dataset, features_list):
 
     return normals, outliers
 
-def featureReformat(numpy_array, features):
+def featureReformat(numpy_array, features_list):
     """
         Format a numpy array object into a python
         dictionary object.
@@ -85,9 +85,9 @@ def featureReformat(numpy_array, features):
 
     for array in numpy_array:
         data_point = {}
-        for i in range(len(features)):
+        for i in range(len(features_list)):
             value = array[i]
-            key = features[i]
+            key = features_list[i]
             data_point[key] = value
         result.append(data_point)
 
