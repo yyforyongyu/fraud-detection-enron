@@ -11,6 +11,22 @@ from sklearn.cross_validation import train_test_split
 from sklearn.pipeline import Pipeline
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
+from sklearn.linear_model import LinearRegression
+
+
+def buildRegression(features, labels):
+    """
+        Build a linear regression model for outliers cleaning.
+
+        Return the predictions and the score.
+    """
+
+    ### fit the model and get predictions
+    reg = LinearRegression().fit(features, labels)
+    predictions = reg.predict(features)
+
+    return predictions, reg.score(features, labels)
+
 
 def outlierCleaner(predictions, features, labels):
     """
@@ -123,6 +139,7 @@ def personMapping(dict_list, dataset, features_list):
                 my_dataset[key] = item
     return my_dataset
 
+
 def featureLabelSplit(my_dataset, features_list):
     """
         A simple function creates features and labels
@@ -132,6 +149,7 @@ def featureLabelSplit(my_dataset, features_list):
     data = featureFormat(my_dataset, features_list, sort_keys = True)
     labels, features = targetFeatureSplit(data)
     return features, labels
+
 
 def trainTestSplit(my_dataset, features_list):
     """
@@ -150,6 +168,7 @@ def trainTestSplit(my_dataset, features_list):
         features, labels, test_size=0.25, random_state=42)
 
     return features_train, features_test, labels_train, labels_test
+
 
 def evaluateModel(y_true, y_pred):
     """
@@ -172,6 +191,7 @@ def evaluateModel(y_true, y_pred):
 
     return accuracy, f1, precision, recall
 
+
 def tuneEstimator(pipeline, param, features_train, features_test, labels_train):
     """
         Tune the classifiers to find the best estimator.
@@ -188,6 +208,7 @@ def tuneEstimator(pipeline, param, features_train, features_test, labels_train):
     best_clf = clf.best_estimator_
     labels_pred = best_clf.predict(features_test)
     return best_clf, labels_pred, tuned_scores
+
 
 def trainModel(my_dataset, features_list, feature_selection, classifiers, scaling=False):
     """
@@ -286,6 +307,7 @@ def trainModel(my_dataset, features_list, feature_selection, classifiers, scalin
 
     return trained_model, tuned_score
 
+
 def dumpResult(data):
     """
         Take the results from running models and dump
@@ -309,6 +331,7 @@ def dumpResult(data):
 
         for model in ordered_data:
             writer.writerow(model)
+
 
 def findBest(data):
     """
