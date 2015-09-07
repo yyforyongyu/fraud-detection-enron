@@ -140,7 +140,8 @@ classifiers = [('linear_svc', linear_svc, params_svc),
 ### stratified shuffle split cross validation. For more info:
 ### http://scikit-learn.org/stable/modules/generated/sklearn.cross_validation.StratifiedShuffleSplit.html
 
-cleaned_model_sets_scaled, tuned_score_2 = trainModel(my_cleaned_dataset, features_list, scaling=True)
+cleaned_model_sets_scaled, tuned_score_2 = trainModel(my_cleaned_dataset, features_list,
+    feature_selection=feature_selection, classifiers=classifiers, scaling=True)
 ### Task 6: Dump your classifier, dataset, and features_list so anyone can
 ### check your results. You do not need to change anything below, but make sure
 ### that the version of poi_id.py that you submit can be run on its own and

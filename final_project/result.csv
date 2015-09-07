@@ -16,3 +16,6 @@ True,10,False,extra_tree,linear_svc,0.97,0.667,1.0,0.5,6.52
 True,22,False,extra_tree_with_pca,linear_svc,0.97,0.667,1.0,0.5,7.133
 True,12,False,extra_tree,ada_boost,0.97,0.667,1.0,0.5,9.987
 True,24,False,extra_tree_with_pca,ada_boost,0.97,0.667,1.0,0.5,10.917
+True,1,True,k_best,linear_svc,0.97,0.667,1.0,0.5,1.525
+True,13,True,k_best_with_pca,linear_svc,0.97,0.667,1.0,0.5,2.187
+True,10,True,extra_tree,linear_svc,0.97,0.667,1.0,0.5,6.838

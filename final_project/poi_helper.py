@@ -10,6 +10,7 @@ from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_sc
 from sklearn.cross_validation import train_test_split
 from sklearn.pipeline import Pipeline
 import numpy as np
+from sklearn.preprocessing import MinMaxScaler
 
 def outlierCleaner(predictions, features, labels):
     """
