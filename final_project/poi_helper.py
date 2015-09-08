@@ -26,7 +26,7 @@ def buildRegression(features, labels):
 
     return predictions, reg.score(features, labels)
 
-def outlierCleaner(dataset, features_list):
+def outlierCleaner(features, labels):
     """
         clean away the 10% of points that have the largest
         residual errors (different between the prediction
@@ -39,12 +39,7 @@ def outlierCleaner(dataset, features_list):
         formats after calling featureFormat.
     """
 
-    normals = []
-    outliers = []
-    data = []
-
-    ### unpack features and labels
-    features, labels = featureLabelSplit(dataset, features_list)
+    normals, outliers, data = [], [], []
 
     ### get predictions
     predictions, score = buildRegression(features, labels)
@@ -205,7 +200,7 @@ def tuneEstimator(pipeline, param, features_train, features_test, labels_train):
         Return the best estimator, predictions and scores.
     """
 
-    clf = GridSearchCV(pipeline, param)
+    clf = GridSearchCV(pipeline, param, scoring)
     ### train the model
     clf.fit(features_train, labels_train)
     ### store the tuning results
@@ -215,7 +210,7 @@ def tuneEstimator(pipeline, param, features_train, features_test, labels_train):
     labels_pred = best_clf.predict(features_test)
     return best_clf, labels_pred, tuned_scores
 
-def trainModel(my_dataset, features_list, feature_selection, classifiers, scaling=False):
+def trainModel(my_dataset, features_list, feature_selection, classifiers, scaling=False, cleaned=False):
     """
         A model training function.
 
@@ -228,9 +223,9 @@ def trainModel(my_dataset, features_list, feature_selection, classifiers, scalin
         the model based on accuracy score, precision score,
         recall score, and f1 score.
 
-        If scaling is True, it will scale features only when
-        appropriate classifiers are used. If scaling_all is True,
-        it will scale features for all classifiers.
+        If scaling is True, it will scale features before processing.
+        If cleaned is True, it will clean the outliers found in
+        training set.
 
         Return a list of models and tuned scores, and writes a csv
         file to store the results.
@@ -239,10 +234,13 @@ def trainModel(my_dataset, features_list, feature_selection, classifiers, scalin
     ### split the training and testing sets
     features_train, features_test, labels_train, labels_test = trainTestSplit(my_dataset, features_list)
 
-    trained_model = []
+    trained_model, tuned_score, model_results = [], [], []
     count = 0
-    tuned_score = []
-    model_results = []
+
+    ### clean the outliers in training set
+    if cleaned:
+        cleaned_data, outliers = outlierCleaner(features_train, labels_train)
+        labels_train, features_train = targetFeatureSplit(cleaned_data)
 
     ### iter through feature selection and classification methods
     for selection_method in feature_selection:
