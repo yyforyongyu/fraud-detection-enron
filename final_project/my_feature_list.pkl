@@ -39,10 +39,4 @@ aS'long_term_incentive'
 p19
 aS'from_poi_to_this_person'
 p20
-aS'stock_salary_ratio'
-p21
-aS'poi_from_ratio'
-p22
-aS'poi_to_ratio'
-p23
 a.
