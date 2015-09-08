@@ -10,7 +10,7 @@ from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_sc
 from sklearn.cross_validation import train_test_split
 from sklearn.pipeline import Pipeline
 import numpy as np
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import scale
 from sklearn.linear_model import LinearRegression
 
 def buildRegression(features, labels):
@@ -144,13 +144,18 @@ def personMapping(dict_list, dataset, features_list):
                 my_dataset[key] = item
     return my_dataset
 
-def featureLabelSplit(my_dataset, features_list):
+def featureLabelSplit(my_dataset, features_list, scaling=False):
     """
-        A simple function creates features and labels
+        A simple function creates features and labels. If scaling
+        is true, data will be scaled before splitting.
 
         Return features and labels
     """
     data = featureFormat(my_dataset, features_list, sort_keys = True)
+
+    if scaling:
+        data = scale(data)
+
     labels, features = targetFeatureSplit(data)
     return features, labels
 
@@ -254,11 +259,6 @@ def trainModel(my_dataset, features_list, feature_selection, classifiers, scalin
             ### unpack name, function and parameters
             classifier = item[:2]
             param = item[2]
-
-            ### scale the features before training
-            if scaling:
-                features_train = MinMaxScaler().fit_transform(features_train)
-                features_test = MinMaxScaler().fit_transform(features_test)
 
             try:
 
