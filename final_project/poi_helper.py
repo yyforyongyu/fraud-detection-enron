@@ -148,10 +148,10 @@ def featureLabelSplit(my_dataset, features_list, scaling=False):
     """
     data = featureFormat(my_dataset, features_list, sort_keys = True)
 
-    if scaling:
-        data = scale(data)
-
     labels, features = targetFeatureSplit(data)
+    if scaling:
+        features = scale(features)
+
     return features, labels
 
 def trainTestSplit(my_dataset, features_list, scaling=False):
