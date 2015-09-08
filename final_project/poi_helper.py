@@ -154,7 +154,7 @@ def featureLabelSplit(my_dataset, features_list, scaling=False):
     labels, features = targetFeatureSplit(data)
     return features, labels
 
-def trainTestSplit(my_dataset, features_list):
+def trainTestSplit(my_dataset, features_list, scaling=False):
     """
         A training and testing set split function.
 
@@ -165,7 +165,7 @@ def trainTestSplit(my_dataset, features_list):
         Return training and testing datasets.
     """
 
-    features, labels = featureLabelSplit(my_dataset, features_list)
+    features, labels = featureLabelSplit(my_dataset, features_list, scaling)
 
     features_train, features_test, labels_train, labels_test = train_test_split(
         features, labels, test_size=0.25, random_state=42)
@@ -200,7 +200,7 @@ def tuneEstimator(pipeline, param, features_train, features_test, labels_train):
         Return the best estimator, predictions and scores.
     """
 
-    clf = GridSearchCV(pipeline, param, scoring)
+    clf = GridSearchCV(pipeline, param)
     ### train the model
     clf.fit(features_train, labels_train)
     ### store the tuning results
@@ -232,7 +232,7 @@ def trainModel(my_dataset, features_list, feature_selection, classifiers, scalin
     """
 
     ### split the training and testing sets
-    features_train, features_test, labels_train, labels_test = trainTestSplit(my_dataset, features_list)
+    features_train, features_test, labels_train, labels_test = trainTestSplit(my_dataset, features_list, scaling)
 
     trained_model, tuned_score, model_results = [], [], []
     count = 0
@@ -284,11 +284,6 @@ def trainModel(my_dataset, features_list, feature_selection, classifiers, scalin
                     ### print out evaluation scores
                     accuracy, f1, precision, recall = evaluateModel(labels_test, labels_pred)
 
-                    ### check the which dataset
-                    if len(my_dataset) > 140:
-                        cleaned = False
-                    else:
-                        cleaned = True
                     ### store the information of models
                     model_results.append((cleaned, count, scaling, selection_method[0], item[0], accuracy, f1,
                            precision, recall, round(time_used, 3)))

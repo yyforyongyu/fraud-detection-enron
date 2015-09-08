@@ -20,3 +20,7 @@ True,1,True,k_best,linear_svc,0.97,0.667,1.0,0.5,1.525
 True,13,True,k_best_with_pca,linear_svc,0.97,0.667,1.0,0.5,2.187
 True,10,True,extra_tree,linear_svc,0.97,0.667,1.0,0.5,6.838
 False,1,True,k_best,linear_svc,0.944,0.5,1.0,0.333,1.565
+False,5,True,k_best_with_pca,linear_svc,0.917,0.4,0.5,0.333,2.243
+False,2,True,linear_svc_l1,linear_svc,0.917,0.0,0.0,0.0,3.673
+False,8,True,extra_tree_with_pca,linear_svc,0.917,0.4,0.5,0.333,7.553
+False,1,True,k_best,linear_svc,0.944,0.5,1.0,0.333,1.563
