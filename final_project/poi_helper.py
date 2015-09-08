@@ -200,7 +200,7 @@ def tuneEstimator(pipeline, param, features_train, features_test, labels_train):
         Return the best estimator, predictions and scores.
     """
 
-    clf = GridSearchCV(pipeline, param)
+    clf = GridSearchCV(pipeline, param, scoring='f1')
     ### train the model
     clf.fit(features_train, labels_train)
     ### store the tuning results
@@ -210,7 +210,7 @@ def tuneEstimator(pipeline, param, features_train, features_test, labels_train):
     labels_pred = best_clf.predict(features_test)
     return best_clf, labels_pred, tuned_scores
 
-def trainModel(my_dataset, features_list, feature_selection, classifiers, scaling=False, cleaned=False):
+def trainModel(my_dataset, features_list, feature_selection, classifiers, scaling=False):
     """
         A model training function.
 
@@ -224,8 +224,6 @@ def trainModel(my_dataset, features_list, feature_selection, classifiers, scalin
         recall score, and f1 score.
 
         If scaling is True, it will scale features before processing.
-        If cleaned is True, it will clean the outliers found in
-        training set.
 
         Return a list of models and tuned scores, and writes a csv
         file to store the results.
@@ -236,11 +234,6 @@ def trainModel(my_dataset, features_list, feature_selection, classifiers, scalin
 
     trained_model, tuned_score, model_results = [], [], []
     count = 0
-
-    ### clean the outliers in training set
-    if cleaned:
-        cleaned_data, outliers = outlierCleaner(features_train, labels_train)
-        labels_train, features_train = targetFeatureSplit(cleaned_data)
 
     ### iter through feature selection and classification methods
     for selection_method in feature_selection:
@@ -285,7 +278,7 @@ def trainModel(my_dataset, features_list, feature_selection, classifiers, scalin
                     accuracy, f1, precision, recall = evaluateModel(labels_test, labels_pred)
 
                     ### store the information of models
-                    model_results.append((cleaned, count, scaling, selection_method[0], item[0], accuracy, f1,
+                    model_results.append((count, scaling, selection_method[0], item[0], accuracy, f1,
                            precision, recall, round(time_used, 3)))
                     print ""
 
@@ -317,7 +310,7 @@ def dumpResult(data):
 
         ### write row for a new file
         if not file_exists:
-            writer.writerow(["cleaned", "model", "scaled", "feature_selection_method",
+            writer.writerow(["model", "scaled", "feature_selection_method",
                              "classification_method", "accuracy_score", "f1_score",
                              "precision_score", "recall_score", "time_used"])
 
@@ -348,3 +341,23 @@ def findBest(data):
     ordered_data.sort(key=lambda value:value[-1])
 
     return ordered_data
+
+def crossValidate(data_dict, features_list, rs, cleaned=False):
+    features, labels = featureLabelSplit(data_dict, features_list)
+
+    for train_index, test_index in rs:
+        features_train = [features[ii] for ii in train_index]
+        features_test = [features[ii] for ii in test_index]
+        labels_train = [labels[ii] for ii in train_index]
+        labels_test = [labels[ii] for ii in test_index]
+
+        if cleaned:
+            cleaned_data, outliers = outlierCleaner(features_train, labels_train)
+            labels_train, features_train = targetFeatureSplit(cleaned_data)
+
+        try:
+            clf.fit(features_train, labels_train)
+        except Exception, e:
+            print e
+    features_train, features_test, labels_train, labels_test = trainTestSplit(data_dict, features_list)
+    evaluateModel(clf.predict(features_test), labels_test)

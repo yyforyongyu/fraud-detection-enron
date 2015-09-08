@@ -7,6 +7,10 @@ sys.path.append("../tools/")
 from feature_format import featureFormat, targetFeatureSplit
 from tester import dump_classifier_and_data
 from poi_helper import *
+import numpy as np
+
+### Load the dictionary containing the dataset
+data_dict = pickle.load(open("final_project_dataset.pkl", "r") )
 
 ### Task 1: Select what features you'll use.
 ### features_list is a list of strings, each of which is a feature name.
@@ -32,26 +36,8 @@ features_list = ['poi',
                  'long_term_incentive',
                  'from_poi_to_this_person']# You will need to use more features
 
-### Load the dictionary containing the dataset
-data_dict = pickle.load(open("final_project_dataset.pkl", "r") )
-
-
 ### Task 2: Remove outliers
 data_dict.pop("TOTAL")
-
-### Store to my_dataset for easy export below.
-my_dataset = data_dict
-data = featureFormat(my_dataset, features_list, sort_keys = True)
-labels, features = targetFeatureSplit(data)
-
-### use a regression model to find outliers
-from sklearn.linear_model import LinearRegression
-reg = LinearRegression()
-reg.fit(features, labels)
-predictions = reg.predict(features)
-
-### extract normal data points and outliers
-cleaned_data, outliers = outlierCleaner(predictions, features, labels)
 
 
 ### Task 3: Create new feature(s)
@@ -75,26 +61,26 @@ for key, item in data_dict.iteritems():
     else:
         item["poi_to_ratio"] = "NaN"
 
-### update dataset
-my_cleaned_dataset = personMapping(featureReformat(cleaned_data, features_list), data_dict, features_list)
+new_features_list = features_list + ["stock_salary_ratio", "poi_from_ratio", "poi_to_ratio"]
 
-### update features_list
-features_list += ["stock_salary_ratio", "poi_from_ratio", "poi_to_ratio"]
 
 ### choose a feature selection method
 from sklearn.feature_selection import SelectKBest
 from sklearn.svm import LinearSVC
 from sklearn.linear_model import RandomizedLogisticRegression
 from sklearn.ensemble import ExtraTreesClassifier
-from sklearn.decomposition import PCA
 
 feature_selection = [('k_best', SelectKBest(k = 5)),
                      ('linear_svc_l1', LinearSVC(C=0.01, penalty="l1", dual=False, random_state=31)),
                      ('logistic_reg', RandomizedLogisticRegression(C=1, selection_threshold=0.01, random_state=31)),
                      ('extra_tree', ExtraTreesClassifier(max_features=5, random_state=31))]
 
-from sklearn.pipeline import FeatureUnion, Pipeline
-### combine pca to feature selection
+from sklearn.decomposition import PCA
+pca = PCA(n_components=5)
+
+from sklearn.pipeline import FeatureUnion
+
+### chain pca to feature selection
 combined_feature = []
 for method in feature_selection:
     new_method = FeatureUnion([('pca', PCA(n_components=5)), method])
@@ -139,14 +125,26 @@ classifiers = [('linear_svc', linear_svc, params_svc),
 ### function. Because of the small size of the dataset, the script uses
 ### stratified shuffle split cross validation. For more info:
 ### http://scikit-learn.org/stable/modules/generated/sklearn.cross_validation.StratifiedShuffleSplit.html
-
-cleaned_model_sets_scaled, tuned_score_2 = trainModel(my_cleaned_dataset, features_list,
-    feature_selection=feature_selection, classifiers=classifiers, scaling=True)
+### non-scaled results
+full_model_sets, score_full = trainModel(data_dict, features_list,
+                                         feature_selection=feature_selection,
+                                         classifiers=classifiers)
 ### Task 6: Dump your classifier, dataset, and features_list so anyone can
 ### check your results. You do not need to change anything below, but make sure
 ### that the version of poi_id.py that you submit can be run on its own and
 ### generates the necessary .pkl files for validating your results.
-clf = pipeline_pca_linearsvc = cleaned_model_sets_scaled[0][1]
-my_dataset = my_cleaned_dataset
+estimator = full_model_sets[0][1]
 
+from sklearn.cross_validation import ShuffleSplit
+rs = ShuffleSplit(data.shape[0], n_iter=10, test_size=.25, random_state=31)
+
+rs = ShuffleSplit(data.shape[0], n_iter=1000, test_size=.3, random_state=31)
+crossValidate(data_dict, features_list, rs)
+
+### prepare for the test
+clf = clf
+my_dataset = data_dict
+features_list = features_list
+
+### dump for testing
 dump_classifier_and_data(clf, my_dataset, features_list)
