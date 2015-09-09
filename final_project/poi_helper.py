@@ -7,7 +7,7 @@
 from feature_format import featureFormat, targetFeatureSplit
 from sklearn.grid_search import GridSearchCV
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
-from sklearn.cross_validation import train_test_split
+from sklearn.cross_validation import train_test_split, StratifiedShuffleSplit
 from sklearn.pipeline import Pipeline
 import numpy as np
 from sklearn.preprocessing import StandardScaler
@@ -194,14 +194,14 @@ def evaluateModel(y_true, y_pred):
 
     return accuracy, f1, precision, recall
 
-def tuneEstimator(pipeline, param, features_train, features_test, labels_train):
+def tuneEstimator(pipeline, param, features_train, features_test, labels_train, cv=5):
     """
         Tune the classifiers to find the best estimator.
 
         Return the best estimator, predictions and scores.
     """
 
-    clf = GridSearchCV(pipeline, param, scoring='f1')
+    clf = GridSearchCV(pipeline, param, scoring='f1', cv=cv)
     ### train the model
     clf.fit(features_train, labels_train)
     ### store the tuning results
@@ -259,10 +259,10 @@ def trainModel(my_dataset, features_list, feature_selection, classifiers, scalin
 
                 ### tune the model
                 try:
-
+                    sss = StratifiedShuffleSplit(labels_train, n_iter=100, test_size=.25, random_state=42)
                     print "--start tuning..."
                     clf, labels_pred, grid_scores = tuneEstimator(pipeline, param, features_train,
-                                                                  features_test, labels_train)
+                                                                  features_test, labels_train, cv=sss)
 
                     ### store the tuning results
                     tuned_score.append(grid_scores)
@@ -340,10 +340,15 @@ def findBest(data):
 
     return ordered_data
 
-def crossValidate(data_dict, features_list, rs, cleaned=False):
-    features, labels = featureLabelSplit(data_dict, features_list)
+def crossValidate(data_dict, features_list, sss, clf, scaling=False, cleaned=False):
+    features, labels = featureLabelSplit(data_dict, features_list, scaling)
+    PERF_FORMAT_STRING = """Accuracy: {}, Precision: {}, Recall: {}, F1: {}, F2: {}"""
+    true_negatives = 0
+    false_negatives = 0
+    true_positives = 0
+    false_positives = 0
 
-    for train_index, test_index in rs:
+    for train_index, test_index in sss:
         features_train = [features[ii] for ii in train_index]
         features_test = [features[ii] for ii in test_index]
         labels_train = [labels[ii] for ii in train_index]
@@ -355,7 +360,33 @@ def crossValidate(data_dict, features_list, rs, cleaned=False):
 
         try:
             clf.fit(features_train, labels_train)
+            predictions = clf.predict(features_test)
+            for prediction, truth in zip(predictions, labels_test):
+                if prediction == 0 and truth == 0:
+                    true_negatives += 1
+                elif prediction == 0 and truth == 1:
+                    false_negatives += 1
+                elif prediction == 1 and truth == 0:
+                    false_positives += 1
+                elif prediction == 1 and truth == 1:
+                    true_positives += 1
+                else:
+                    print "Warning: Found a predicted label not == 0 or 1."
+                    print "All predictions should take value 0 or 1."
+                    print "Evaluating performance for processed predictions:"
+                    break
         except Exception, e:
             print e
-    features_train, features_test, labels_train, labels_test = trainTestSplit(data_dict, features_list)
-    evaluateModel(clf.predict(features_test), labels_test)
+    try:
+        total_predictions = true_negatives + false_negatives + false_positives + true_positives
+        accuracy = round(1.0*(true_positives + true_negatives)/total_predictions, 4)
+        precision = round(1.0*true_positives/(true_positives+false_positives), 4)
+        recall = round(1.0*true_positives/(true_positives+false_negatives), 4)
+        f1 = round(2.0 * true_positives/(2*true_positives + false_positives+false_negatives), 4)
+        f2 = round((1+2.0*2.0) * precision*recall/(4*precision + recall), 4)
+
+        print PERF_FORMAT_STRING.format(accuracy, precision, recall, f1, f2, display_precision = 5)
+        #print RESULTS_FORMAT_STRING.format(total_predictions, true_positives, false_positives, false_negatives, true_negatives)
+        print ""
+    except Exception, e:
+        print "Got a divide by zero when trying out", e
