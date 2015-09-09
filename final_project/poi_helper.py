@@ -44,7 +44,7 @@ def outlierCleaner(features, labels):
     ### get predictions
     predictions, score = buildRegression(features, labels)
 
-    length = int(len(predictions) * 0.9) + 1 # define the number of data points to be kept in normals
+    length = int(len(predictions) * 0.99) + 1 # define the number of data points to be kept in normals
 
     ### create a dataset with a format:
     ### tuple(feature, label, residual errors)
@@ -148,9 +148,10 @@ def featureLabelSplit(my_dataset, features_list, scaling=False):
     """
     data = featureFormat(my_dataset, features_list, sort_keys = True)
 
-    labels, features = targetFeatureSplit(data)
     if scaling:
-        features = scale(features)
+        data = StandardScaler().fit_transform(data)
+
+    labels, features = targetFeatureSplit(data)
 
     return features, labels
 
@@ -327,12 +328,9 @@ def findBest(data):
 
     ordered_data = []
 
-    ### find the biggest accuracy score
-    accuracy = max(data, key=lambda value:value[5])[5]
-
-    ### exclude model that has lower accuracy scores
+    ### exclude model that has lower precision/recall scores
     for model in data:
-        if model[5] < accuracy:
+        if model[6] < 0.3 or model[7] < 0.3:
             pass
         else:
             ordered_data.append(model)

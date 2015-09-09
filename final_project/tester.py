@@ -87,6 +87,7 @@ def load_classifier_and_data():
     clf = pickle.load(open(CLF_PICKLE_FILENAME, "r") )
     dataset = pickle.load(open(DATASET_PICKLE_FILENAME, "r") )
     feature_list = pickle.load(open(FEATURE_LIST_FILENAME, "r"))
+
     return clf, dataset, feature_list
 
 def main():

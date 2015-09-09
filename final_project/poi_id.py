@@ -136,7 +136,7 @@ full_model_sets, score_full = trainModel(data_dict, features_list,
 estimator = full_model_sets[0][1]
 
 from sklearn.cross_validation import ShuffleSplit
-rs = ShuffleSplit(data.shape[0], n_iter=10, test_size=.25, random_state=31)
+#rs = ShuffleSplit(data.shape[0], n_iter=10, test_size=.25, random_state=31)
 
 rs = ShuffleSplit(data.shape[0], n_iter=1000, test_size=.3, random_state=31)
 crossValidate(data_dict, features_list, rs)
