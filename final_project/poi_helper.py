@@ -10,7 +10,7 @@ from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_sc
 from sklearn.cross_validation import train_test_split
 from sklearn.pipeline import Pipeline
 import numpy as np
-from sklearn.preprocessing import scale
+from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LinearRegression
 
 def buildRegression(features, labels):
@@ -44,7 +44,7 @@ def outlierCleaner(features, labels):
     ### get predictions
     predictions, score = buildRegression(features, labels)
 
-    length = int(len(predictions) * 0.99) + 1 # define the number of data points to be kept in normals
+    length = int(len(predictions) * 0.9) + 1 # define the number of data points to be kept in normals
 
     ### create a dataset with a format:
     ### tuple(feature, label, residual errors)
@@ -148,10 +148,10 @@ def featureLabelSplit(my_dataset, features_list, scaling=False):
     """
     data = featureFormat(my_dataset, features_list, sort_keys = True)
 
-    if scaling:
-        data = StandardScaler().fit_transform(data)
-
     labels, features = targetFeatureSplit(data)
+
+    if scaling:
+        features = StandardScaler().fit_transform(features)
 
     return features, labels
 
