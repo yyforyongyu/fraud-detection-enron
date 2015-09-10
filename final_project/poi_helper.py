@@ -282,7 +282,6 @@ def trainModel(my_dataset, features_list, feature_selection, classifiers, scalin
                     model_results.append((count, scaling, selection_method[0], item[0], accuracy, f1,
                            precision, recall, round(time_used, 3)))
 
-                    print "--evaluation complete, time used: {}".format(time() - time_used)
                     print ""
 
                 except Exception, e:
