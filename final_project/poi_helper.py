@@ -26,17 +26,17 @@ def buildRegression(features, labels):
 
     return predictions, reg.score(features, labels)
 
-def outlierCleaner(features, labels):
+def outlierCleaner(features, labels, percent=.1):
     """
-        clean away the 10% of points that have the largest
-        residual errors (different between the prediction
-        and the actual label value)
+        clean away the given percent of points that have
+        the largest residual errors (different between
+        the prediction and the actual label value)
 
         return two lists - normals and outliers. Outliers
-        are data points with the top 10% largest residual
-        errors, the rest are in normals. Both of the lists
-        are formatted as numpy array, and exactly like the
-        formats after calling featureFormat.
+        are data points with the top given percent largest
+        residual errors, the rest are in normals. Both of
+        the lists are formatted as numpy array, and exactly
+        like the formats after calling featureFormat.
     """
 
     normals, outliers, data = [], [], []
@@ -44,7 +44,7 @@ def outlierCleaner(features, labels):
     ### get predictions
     predictions, score = buildRegression(features, labels)
 
-    length = int(len(predictions) * 0.9) + 1 # define the number of data points to be kept in normals
+    length = int(len(predictions) * (1 - percent)) + 1 # define the number of data points to be kept in normals
 
     ### create a dataset with a format:
     ### tuple(feature, label, residual errors)
@@ -232,6 +232,8 @@ def trainModel(my_dataset, features_list, feature_selection, classifiers, scalin
 
     ### split the training and testing sets
     features_train, features_test, labels_train, labels_test = trainTestSplit(my_dataset, features_list, scaling)
+    cleaned_data, outliers = outlierCleaner(features_train, labels_train, percent=.05)
+    labels_train, features_train = targetFeatureSplit(cleaned_data)
 
     trained_model, tuned_score, model_results = [], [], []
     count = 0
@@ -259,7 +261,7 @@ def trainModel(my_dataset, features_list, feature_selection, classifiers, scalin
 
                 ### tune the model
                 try:
-                    sss = StratifiedShuffleSplit(labels_train, n_iter=100, random_state=42)
+                    sss = StratifiedShuffleSplit(labels_train, n_iter=10, random_state=42)
                     print "--start tuning..."
                     clf, labels_pred, grid_scores = tuneEstimator(pipeline, param, features_train,
                                                                   features_test, labels_train, cv=sss)
