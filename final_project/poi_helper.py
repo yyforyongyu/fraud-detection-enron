@@ -259,7 +259,7 @@ def trainModel(my_dataset, features_list, feature_selection, classifiers, scalin
 
                 ### tune the model
                 try:
-                    sss = StratifiedShuffleSplit(labels_train, n_iter=100, random_state=42)
+                    sss = StratifiedShuffleSplit(labels_train, n_iter=1000, random_state=42)
                     print "--start tuning..."
                     clf, labels_pred, grid_scores = tuneEstimator(pipeline, param, features_train,
                                                                   features_test, labels_train, cv=sss)
