@@ -1,0 +1,8 @@
+model,scaled,feature_selection_method,classification_method,accuracy_score,f1_score,precision_score,recall_score,time_used
+1,True,k_best,linear_svc,0.944,0.5,1.0,0.333,55.451
+5,True,k_best_with_pca,linear_svc,0.917,0.4,0.5,0.333,72.925
+7,True,extra_tree_with_pca,linear_svc,0.917,0.4,0.5,0.333,246.344
+4,True,extra_tree,k_neighbors,0.917,0.571,0.5,0.667,533.819
+1,False,k_best,linear_svc,0.944,0.5,1.0,0.333,58.135
+4,False,extra_tree,k_neighbors,0.889,0.333,0.333,0.333,537.648
+8,False,extra_tree_with_pca,k_neighbors,0.889,0.333,0.333,0.333,581.084
