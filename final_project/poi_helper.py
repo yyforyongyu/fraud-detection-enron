@@ -21,7 +21,7 @@ def buildRegression(features, labels):
     """
 
     ### fit the model and get predictions
-    reg = LinearRegression().fit(features, labels)
+    reg = LinearRegression(normalize=True).fit(features, labels)
     predictions = reg.predict(features)
 
     return predictions, reg.score(features, labels)
@@ -169,7 +169,10 @@ def trainTestSplit(my_dataset, features_list, scaling=False):
     features, labels = featureLabelSplit(my_dataset, features_list, scaling)
 
     features_train, features_test, labels_train, labels_test = train_test_split(
-        features, labels, test_size=0.25, random_state=42)
+        features, labels, test_size=0.1, random_state=42)
+
+    cleaned_data, outliers = outlierCleaner(features_train, labels_train, percent=.05)
+    labels_train, features_train = targetFeatureSplit(cleaned_data)
 
     return features_train, features_test, labels_train, labels_test
 
@@ -232,6 +235,7 @@ def trainModel(my_dataset, features_list, feature_selection, classifiers, scalin
 
     ### split the training and testing sets
     features_train, features_test, labels_train, labels_test = trainTestSplit(my_dataset, features_list, scaling)
+
     cleaned_data, outliers = outlierCleaner(features_train, labels_train, percent=.05)
     labels_train, features_train = targetFeatureSplit(cleaned_data)
 
@@ -343,7 +347,7 @@ def findBest(data):
 
     return ordered_data
 
-def crossValidate(data_dict, features_list, sss, clf, scaling=False, cleaned=False):
+def crossValidate(data_dict, features_list, sss, clf, scaling=False):
     features, labels = featureLabelSplit(data_dict, features_list, scaling)
     PERF_FORMAT_STRING = """Accuracy: {}, Precision: {}, Recall: {}, F1: {}, F2: {}"""
     true_negatives = 0
@@ -357,9 +361,8 @@ def crossValidate(data_dict, features_list, sss, clf, scaling=False, cleaned=Fal
         labels_train = [labels[ii] for ii in train_index]
         labels_test = [labels[ii] for ii in test_index]
 
-        if cleaned:
-            cleaned_data, outliers = outlierCleaner(features_train, labels_train)
-            labels_train, features_train = targetFeatureSplit(cleaned_data)
+        cleaned_data, outliers = outlierCleaner(features_train, labels_train, percent=.05)
+        labels_train, features_train = targetFeatureSplit(cleaned_data)
 
         try:
             clf.fit(features_train, labels_train)
@@ -393,3 +396,15 @@ def crossValidate(data_dict, features_list, sss, clf, scaling=False, cleaned=Fal
         print ""
     except Exception, e:
         print "Got a divide by zero when trying out", e
+
+def gridScoreReader(tuning_score):
+    result = []
+    for item in tuning_score:
+        tuned_result = []
+        header = item[0].keys() + ["mean", "std"]
+        for key, value in item[0].iteritems():
+            tuned_result.append(value)
+        tuned_result.append(round(item[1], 4))
+        tuned_result.append(round(np.std(item[2]), 4))
+        result.append(tuned_result)
+    return pd.DataFrame(result, columns = header)
