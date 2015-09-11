@@ -321,13 +321,15 @@ def dumpResult(data):
         writer = csv.writer(f)
 
         ### write row for a new file
-        if not file_exists:
+        if file_exists:
+            os.remove("result.csv")
+        else:
             writer.writerow(["model", "scaled", "feature_selection_method",
                              "classification_method", "accuracy_score", "f1_score",
                              "precision_score", "recall_score", "time_used"])
 
-        for model in ordered_data:
-            writer.writerow(model)
+            for model in ordered_data:
+                writer.writerow(model)
 
 def findBest(data):
     """
