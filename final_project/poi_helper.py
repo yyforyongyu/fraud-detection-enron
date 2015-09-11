@@ -284,7 +284,7 @@ def trainModel(my_dataset, features_list, feature_selection, classifiers, scalin
                     print "--training on {} complete, time used: {} \n --start cross validating...".format(model_name, t1)
 
                     ### print out evaluation scores
-                    accuracy, f1, precision, recall = crossValidate(my_dataset, features_list, sss, clf, scaling)
+                    accuracy, f1, precision, recall = crossValidate(my_dataset, features_list, clf, scaling)
                     # accuracy, f1, precision, recall = evaluateModel(labels_test, labels_pred)
                     t2 = time() - t0 - t1
                     print "cross validation complete, time used: {}".format(t2)
@@ -351,8 +351,10 @@ def findBest(data):
 
     return ordered_data
 
-def crossValidate(my_dataset, features_list, sss, clf, scaling=False):
+def crossValidate(my_dataset, features_list, clf, scaling=False):
     features, labels = featureLabelSplit(my_dataset, features_list, scaling)
+    sss = StratifiedShuffleSplit(labels, n_iter=1000, random_state=42)
+
     PERF_FORMAT_STRING = """Accuracy: {}, Precision: {}, Recall: {}, F1: {}, F2: {}"""
     true_negatives = 0
     false_negatives = 0
