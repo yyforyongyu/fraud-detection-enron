@@ -341,7 +341,7 @@ def findBest(data):
 
     ### exclude model that has lower precision/recall scores
     for model in data:
-        if model[6] < 0.3 or model[7] < 0.3:
+        if model[6] < 0.2 or model[7] < 0.2:
             pass
         else:
             ordered_data.append(model)
@@ -355,7 +355,7 @@ def crossValidate(my_dataset, features_list, clf, scaling=False):
     features, labels = featureLabelSplit(my_dataset, features_list, scaling)
     sss = StratifiedShuffleSplit(labels, n_iter=1000, random_state=42)
 
-    PERF_FORMAT_STRING = """Accuracy: {}, Precision: {}, Recall: {}, F1: {}, F2: {}"""
+    PERF_FORMAT_STRING = "Accuracy: {}, Precision: {}, Recall: {}, F1: {}, F2: {}"
     true_negatives = 0
     false_negatives = 0
     true_positives = 0
