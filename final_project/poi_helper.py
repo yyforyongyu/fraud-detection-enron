@@ -280,15 +280,17 @@ def trainModel(my_dataset, features_list, feature_selection, classifiers, scalin
                     model_info = (model_name, clf)
                     trained_model.append(model_info)
 
-                    time_used = time() - t0
-                    print "--training on {} complete, time used {}".format(model_name, time_used)
+                    t1 = time() - t0
+                    print "--training on {} complete, time used: {} \n --start cross validating...".format(model_name, t1)
 
                     ### print out evaluation scores
-                    accuracy, f1, precision, recall = evaluateModel(labels_test, labels_pred)
-
+                    accuracy, f1, precision, recall = crossValidate(my_dataset, features_list, sss, clf, scaling)
+                    # accuracy, f1, precision, recall = evaluateModel(labels_test, labels_pred)
+                    t2 = time() - t0 - t1
+                    print "cross validation complete, time used: {}".format(t2)
                     ### store the information of models
                     model_results.append((count, scaling, selection_method[0], item[0], accuracy, f1,
-                           precision, recall, round(time_used, 3)))
+                           precision, recall, round((time() - t0), 3)))
 
                     print ""
 
@@ -349,8 +351,8 @@ def findBest(data):
 
     return ordered_data
 
-def crossValidate(data_dict, features_list, sss, clf, scaling=False):
-    features, labels = featureLabelSplit(data_dict, features_list, scaling)
+def crossValidate(my_dataset, features_list, sss, clf, scaling=False):
+    features, labels = featureLabelSplit(my_dataset, features_list, scaling)
     PERF_FORMAT_STRING = """Accuracy: {}, Precision: {}, Recall: {}, F1: {}, F2: {}"""
     true_negatives = 0
     false_negatives = 0
@@ -398,6 +400,8 @@ def crossValidate(data_dict, features_list, sss, clf, scaling=False):
         print ""
     except Exception, e:
         print "Got a divide by zero when trying out", e
+
+    return accuracy, f1, precision, recall
 
 def gridScoreReader(tuning_score):
     result = []
