@@ -10,6 +10,8 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LinearRegression
 import sys
+import os
+import csv
 sys.path.append("../tools/")
 from feature_format import featureFormat, targetFeatureSplit
 import numpy as np
@@ -48,10 +50,10 @@ def outlierCleaner(features, labels, percent=.1):
     ### get predictions
     predictions, score = buildRegression(features, labels)
 
-    length = int(len(predictions) * (1 - percent)) + 1 # define the number of data points to be kept in normals
+    ### define the number of data points to be kept in normals
+    length = int(len(predictions) * (1 - percent)) + 1
 
-    ### create a dataset with a format:
-    ### tuple(feature, label, residual errors)
+    ### create a dataset with a format: tuple(feature, label, residual errors)
     for i in range(len(predictions)):
         result = features[i], labels[i], (labels[i] - predictions[i]) ** 2
         data.append(tuple(result))
@@ -151,7 +153,6 @@ def featureLabelSplit(my_dataset, features_list, scaling=False):
         Return features and labels
     """
     data = featureFormat(my_dataset, features_list, sort_keys = True)
-
     labels, features = targetFeatureSplit(data)
 
     if scaling:
@@ -169,12 +170,10 @@ def trainTestSplit(my_dataset, features_list, scaling=False):
 
         Return training and testing datasets.
     """
-
     features, labels = featureLabelSplit(my_dataset, features_list, scaling)
+    features_train, features_test, labels_train, labels_test = train_test_split(features, labels, test_size=0.2, random_state=42)
 
-    features_train, features_test, labels_train, labels_test = train_test_split(
-        features, labels, test_size=0.2, random_state=42)
-
+    ### clean outliers
     cleaned_data, outliers = outlierCleaner(features_train, labels_train, percent=.05)
     labels_train, features_train = targetFeatureSplit(cleaned_data)
 
@@ -216,6 +215,7 @@ def tuneEstimator(pipeline, param, features_train, features_test, labels_train, 
     ### use the best estimator
     best_clf = clf.best_estimator_
     labels_pred = best_clf.predict(features_test)
+
     return best_clf, labels_pred, tuned_scores
 
 def trainModel(my_dataset, features_list, feature_selection, classifiers, scaling=False):
@@ -237,9 +237,8 @@ def trainModel(my_dataset, features_list, feature_selection, classifiers, scalin
         file to store the results.
     """
 
-    ### split the training and testing sets
+    ### split the training and testing sets and clean outliers on training set
     features_train, features_test, labels_train, labels_test = trainTestSplit(my_dataset, features_list, scaling)
-
     cleaned_data, outliers = outlierCleaner(features_train, labels_train, percent=.05)
     labels_train, features_train = targetFeatureSplit(cleaned_data)
 
@@ -249,10 +248,8 @@ def trainModel(my_dataset, features_list, feature_selection, classifiers, scalin
     ### iter through feature selection and classification methods
     for selection_method in feature_selection:
         for item in classifiers:
-
             count += 1
-            print "Model {} \n-working on classifier {}, using slection method {}".format(count, item[0],
-                                                                                          selection_method[0])
+            print "Model {} \n-working on classifier {}, using slection method {}".format(count, item[0], selection_method[0])
 
             ### add a time function to calculate time used by each model
             t0 = time()
@@ -262,7 +259,6 @@ def trainModel(my_dataset, features_list, feature_selection, classifiers, scalin
             param = item[2]
 
             try:
-
                 ### build pipeline
                 pipeline = Pipeline([selection_method, classifier[:2]])
 
@@ -270,8 +266,7 @@ def trainModel(my_dataset, features_list, feature_selection, classifiers, scalin
                 try:
                     sss = StratifiedShuffleSplit(labels_train, n_iter=100, random_state=42)
                     print "--start tuning..."
-                    clf, labels_pred, grid_scores = tuneEstimator(pipeline, param, features_train,
-                                                                  features_test, labels_train, cv=sss)
+                    clf, labels_pred, grid_scores = tuneEstimator(pipeline, param, features_train, features_test, labels_train, cv=sss)
 
                     ### store the tuning results
                     tuned_score.append(grid_scores)
@@ -286,13 +281,13 @@ def trainModel(my_dataset, features_list, feature_selection, classifiers, scalin
 
                     ### print out evaluation scores
                     accuracy, f1, precision, recall = crossValidate(my_dataset, features_list, clf, scaling)
-                    # accuracy, f1, precision, recall = evaluateModel(labels_test, labels_pred)
+
+                    ### claculate time used
                     t2 = time() - t0 - t1
                     print "cross validation complete, time used: {}".format(t2)
-                    ### store the information of models
-                    model_results.append((count, scaling, selection_method[0], item[0], accuracy, f1,
-                           precision, recall, round((time() - t0), 3)))
 
+                    ### store the information of models
+                    model_results.append((count, scaling, selection_method[0], item[0], accuracy, f1, precision, recall, round((time() - t0), 3)))
                     print ""
 
                 except Exception, e:
@@ -311,11 +306,8 @@ def dumpResult(data):
         Take the results from running models and dump
         into a csv file named "result.csv"
     """
-    import csv
-    import os
 
     ordered_data = findBest(data)
-
     file_exists = os.path.isfile("result.csv")
 
     ### remove old file
@@ -329,14 +321,13 @@ def dumpResult(data):
         writer.writerow(["model", "scaled", "feature_selection_method",
                          "classification_method", "accuracy_score", "f1_score",
                          "precision_score", "recall_score", "time_used"])
-
         for model in ordered_data:
             writer.writerow(model)
 
 def findBest(data):
     """
-        Take the results from running models and reorder
-        the data first by its scores then by its runtime.
+        Take the results from running models and filter out
+        precision and recall scores less than 0.2.
 
         Return a list of reordered data.
     """
@@ -356,6 +347,13 @@ def findBest(data):
     return ordered_data
 
 def crossValidate(my_dataset, features_list, clf, scaling=False):
+    """
+        Take dataset, features list, estimator as inputs, run StratifiedShuffleSplit
+        with n_iter = 1000, and calculate the scores.
+
+        return accuracy, f1, recall, precision scores.
+    """
+
     features, labels = featureLabelSplit(my_dataset, features_list, scaling)
     sss = StratifiedShuffleSplit(labels, n_iter=1000, random_state=42)
 
@@ -402,7 +400,6 @@ def crossValidate(my_dataset, features_list, clf, scaling=False):
         f2 = round((1+2.0*2.0) * precision*recall/(4*precision + recall), 4)
 
         print PERF_FORMAT_STRING.format(accuracy, precision, recall, f1, f2, display_precision = 5),
-        #print RESULTS_FORMAT_STRING.format(total_predictions, true_positives, false_positives, false_negatives, true_negatives)
         print ""
     except Exception, e:
         print "Got a divide by zero when trying out", e
@@ -410,6 +407,10 @@ def crossValidate(my_dataset, features_list, clf, scaling=False):
     return accuracy, f1, precision, recall
 
 def gridScoreReader(tuning_score):
+    """
+        Take grid_scores and format it into a pandas dataframe.
+    """
+
     result = []
     header = []
     for item in tuning_score:
