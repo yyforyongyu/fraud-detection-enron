@@ -3,15 +3,18 @@
 """
     A helper library for poi_id.py
 """
-
-from feature_format import featureFormat, targetFeatureSplit
 from sklearn.grid_search import GridSearchCV
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 from sklearn.cross_validation import train_test_split, StratifiedShuffleSplit
 from sklearn.pipeline import Pipeline
-import numpy as np
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LinearRegression
+
+from feature_format import featureFormat, targetFeatureSplit
+import numpy as np
+import pandas as pd
+from time import time
+
 
 def buildRegression(features, labels):
     """
@@ -21,7 +24,7 @@ def buildRegression(features, labels):
     """
 
     ### fit the model and get predictions
-    reg = LinearRegression(normalize=True).fit(features, labels)
+    reg = LinearRegression().fit(features, labels)
     predictions = reg.predict(features)
 
     return predictions, reg.score(features, labels)
@@ -169,7 +172,7 @@ def trainTestSplit(my_dataset, features_list, scaling=False):
     features, labels = featureLabelSplit(my_dataset, features_list, scaling)
 
     features_train, features_test, labels_train, labels_test = train_test_split(
-        features, labels, test_size=0.1, random_state=42)
+        features, labels, test_size=0.2, random_state=42)
 
     cleaned_data, outliers = outlierCleaner(features_train, labels_train, percent=.05)
     labels_train, features_train = targetFeatureSplit(cleaned_data)
@@ -251,7 +254,6 @@ def trainModel(my_dataset, features_list, feature_selection, classifiers, scalin
                                                                                           selection_method[0])
 
             ### add a time function to calculate time used by each model
-            from time import time
             t0 = time()
 
             ### unpack name, function and parameters
@@ -265,7 +267,7 @@ def trainModel(my_dataset, features_list, feature_selection, classifiers, scalin
 
                 ### tune the model
                 try:
-                    sss = StratifiedShuffleSplit(labels_train, n_iter=10, random_state=42)
+                    sss = StratifiedShuffleSplit(labels_train, n_iter=100, random_state=42)
                     print "--start tuning..."
                     clf, labels_pred, grid_scores = tuneEstimator(pipeline, param, features_train,
                                                                   features_test, labels_train, cv=sss)
@@ -399,12 +401,16 @@ def crossValidate(data_dict, features_list, sss, clf, scaling=False):
 
 def gridScoreReader(tuning_score):
     result = []
+    header = []
     for item in tuning_score:
         tuned_result = []
-        header = item[0].keys() + ["mean", "std"]
+        params = item[0].keys()
         for key, value in item[0].iteritems():
             tuned_result.append(value)
         tuned_result.append(round(item[1], 4))
         tuned_result.append(round(np.std(item[2]), 4))
         result.append(tuned_result)
+    for param in params:
+        header.append(param.split("__")[1])
+    header += ['mean', 'std']
     return pd.DataFrame(result, columns = header)
