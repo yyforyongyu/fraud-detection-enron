@@ -9,7 +9,8 @@ from sklearn.cross_validation import train_test_split, StratifiedShuffleSplit
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LinearRegression
-
+import sys
+sys.path.append("../tools/")
 from feature_format import featureFormat, targetFeatureSplit
 import numpy as np
 import pandas as pd
@@ -281,7 +282,7 @@ def trainModel(my_dataset, features_list, feature_selection, classifiers, scalin
                     trained_model.append(model_info)
 
                     t1 = time() - t0
-                    print "--training on {} complete, time used: {} \n --start cross validating...".format(model_name, t1)
+                    print "--training on {} complete, time used: {} \n--start cross validating...".format(model_name, t1)
 
                     ### print out evaluation scores
                     accuracy, f1, precision, recall = crossValidate(my_dataset, features_list, clf, scaling)
@@ -317,19 +318,20 @@ def dumpResult(data):
 
     file_exists = os.path.isfile("result.csv")
 
+    ### remove old file
+    if file_exists:
+            os.remove("result.csv")
+
     with open("result.csv", "a") as f:
         writer = csv.writer(f)
 
         ### write row for a new file
-        if file_exists:
-            os.remove("result.csv")
-        else:
-            writer.writerow(["model", "scaled", "feature_selection_method",
-                             "classification_method", "accuracy_score", "f1_score",
-                             "precision_score", "recall_score", "time_used"])
+        writer.writerow(["model", "scaled", "feature_selection_method",
+                         "classification_method", "accuracy_score", "f1_score",
+                         "precision_score", "recall_score", "time_used"])
 
-            for model in ordered_data:
-                writer.writerow(model)
+        for model in ordered_data:
+            writer.writerow(model)
 
 def findBest(data):
     """
@@ -399,7 +401,7 @@ def crossValidate(my_dataset, features_list, clf, scaling=False):
         f1 = round(2.0 * true_positives/(2*true_positives + false_positives+false_negatives), 4)
         f2 = round((1+2.0*2.0) * precision*recall/(4*precision + recall), 4)
 
-        print PERF_FORMAT_STRING.format(accuracy, precision, recall, f1, f2, display_precision = 5)
+        print PERF_FORMAT_STRING.format(accuracy, precision, recall, f1, f2, display_precision = 5),
         #print RESULTS_FORMAT_STRING.format(total_predictions, true_positives, false_positives, false_negatives, true_negatives)
         print ""
     except Exception, e:

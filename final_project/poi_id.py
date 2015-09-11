@@ -1,20 +1,19 @@
 #!/usr/bin/python
 
-import sys
-import pickle
-sys.path.append("../tools/")
-
-from feature_format import featureFormat, targetFeatureSplit
-from tester import dump_classifier_and_data
 from poi_helper import *
-import numpy as np
+import pickle
+#sys.path.append("../tools/")
+from tester import dump_classifier_and_data, test_classifier
 
 ### Load the dictionary containing the dataset
 data_dict = pickle.load(open("final_project_dataset.pkl", "r") )
 
-### Task 1: Select what features you'll use.
-### features_list is a list of strings, each of which is a feature name.
-### The first feature must be "poi".
+# remove the outlier 'TOTAL'
+data_dict.pop("TOTAL")
+
+# create features for plots
+# features_list is a list of strings, each of which is a feature name.
+# The first feature must be "poi".
 features_list = ['poi',
                  'salary',
                  'to_messages',
@@ -34,13 +33,14 @@ features_list = ['poi',
                  'director_fees',
                  'deferred_income',
                  'long_term_incentive',
-                 'from_poi_to_this_person']# You will need to use more features
+                 'from_poi_to_this_person']
 
-### Task 2: Remove outliers
-data_dict.pop("TOTAL")
+# format the dataset
+data = featureFormat(data_dict, features_list)
 
+# create a pandas dataframe
+df = pd.DataFrame(data, columns = features_list)
 
-### Task 3: Create new feature(s)
 ### add new features to dataset
 for key, item in data_dict.iteritems():
     ### add stock_salary_ratio
@@ -61,26 +61,22 @@ for key, item in data_dict.iteritems():
     else:
         item["poi_to_ratio"] = "NaN"
 
+### update features list
 new_features_list = features_list + ["stock_salary_ratio", "poi_from_ratio", "poi_to_ratio"]
 
-
-### choose a feature selection method
+### prepare for feature selection
 from sklearn.feature_selection import SelectKBest
-from sklearn.svm import LinearSVC
-from sklearn.linear_model import RandomizedLogisticRegression
 from sklearn.ensemble import ExtraTreesClassifier
 
 feature_selection = [('k_best', SelectKBest(k = 5)),
-                     ('linear_svc_l1', LinearSVC(C=0.01, penalty="l1", dual=False, random_state=31)),
-                     ('logistic_reg', RandomizedLogisticRegression(C=1, selection_threshold=0.01, random_state=31)),
-                     ('extra_tree', ExtraTreesClassifier(max_features=5, random_state=31))]
+                     ('extra_tree', ExtraTreesClassifier(max_features=5, class_weight='auto', random_state=42))]
 
+### prepare for pca
 from sklearn.decomposition import PCA
 pca = PCA(n_components=5)
 
-from sklearn.pipeline import FeatureUnion
-
 ### chain pca to feature selection
+from sklearn.pipeline import FeatureUnion
 combined_feature = []
 for method in feature_selection:
     new_method = FeatureUnion([('pca', PCA(n_components=5)), method])
@@ -90,56 +86,64 @@ for method in feature_selection:
 ### update feature selection list
 feature_selection += combined_feature
 
-### Task 4: Try a varity of classifiers
-linear_svc = LinearSVC(random_state=31, dual=False)
+### prepare for classifiers
+from sklearn.svm import LinearSVC
+linear_svc = LinearSVC(class_weight='auto', penalty='l1', dual=False, random_state=42)
 
-params_svc = {'linear_svc__C':[1e-2, 1e-1, 1, 1e2, 1e3],
-              'linear_svc__penalty': ["l1", "l2"],
-              'linear_svc__tol': [1e4, 1e3, 1e2, 1],
-              'linear_svc__max_iter': [1e2, 1e3, 1e4, 1e5]}
+params_svc = {'linear_svc__C':[0.1, 0.3, 1, 3, 10],
+              'linear_svc__tol': [1e-4, 1e-3, 1e-2, 1],
+              'linear_svc__max_iter': [1e3, 1e4]}
 
 from sklearn.neighbors import KNeighborsClassifier
-k_neighbors = KNeighborsClassifier()
-params_kneighbors = {'k_neighbors__n_neighbors': [1, 5, 10, 20, 50],
-                     'k_neighbors__weights': ["uniform", "distance"],
-                     'k_neighbors__algorithm':["ball_tree", "kd_tree", "brute"],
-                     'k_neighbors__leaf_size': [2, 5, 10, 30, 50, 100],
-                     'k_neighbors__p': [1,2]}
+k_neighbors = KNeighborsClassifier(weights='distance', algorithm='auto')
 
-from sklearn.ensemble import AdaBoostClassifier
-from sklearn.tree import DecisionTreeClassifier
-ada_boost = AdaBoostClassifier(random_state=31)
-params_adaboost = {'ada_boost__base_estimator': [DecisionTreeClassifier(), None],
-                   'ada_boost__n_estimators': [1, 5, 10, 20, 50, 100],
-                   'ada_boost__algorithm': ['SAMME', 'SAMME.R'],
-                   'ada_boost__learning_rate': [0.01, 0.03, 0.06, 0.1, 0.3, 0.6, 1, 3, 6, 10],
-                   }
+params_kneighbors = {'k_neighbors__n_neighbors': [1, 3, 10],
+                     'k_neighbors__leaf_size': [2, 5, 10, 30, 50, 100]}
 
+### put all classifiers together
 classifiers = [('linear_svc', linear_svc, params_svc),
-               ('k_neighbors', k_neighbors, params_kneighbors),
-               ('ada_boost', ada_boost, params_adaboost)]
+               ('k_neighbors', k_neighbors, params_kneighbors)]
 
-### Task 5: Tune your classifier to achieve better than .3 precision and recall
-### using our testing script. Check the tester.py script in the final project
-### folder for details on the evaluation method, especially the test_classifier
-### function. Because of the small size of the dataset, the script uses
-### stratified shuffle split cross validation. For more info:
-### http://scikit-learn.org/stable/modules/generated/sklearn.cross_validation.StratifiedShuffleSplit.html
-### non-scaled results
-full_model_sets, score_full = trainModel(data_dict, features_list,
-                                         feature_selection=feature_selection,
-                                         classifiers=classifiers)
-### Task 6: Dump your classifier, dataset, and features_list so anyone can
-### check your results. You do not need to change anything below, but make sure
-### that the version of poi_id.py that you submit can be run on its own and
-### generates the necessary .pkl files for validating your results.
-estimator = full_model_sets[0][1]
+### training with feature scaling
+### you don't need to run this to get the final result
+### uncomment below to run the training
 
-from sklearn.cross_validation import ShuffleSplit
-#rs = ShuffleSplit(data.shape[0], n_iter=10, test_size=.25, random_state=31)
+# model_sets_scaled, score_scaled = trainModel(data_dict, features_list,
+#                                              feature_selection=feature_selection,
+#                                              classifiers=classifiers,
+#                                              scaling=True)
 
-rs = ShuffleSplit(data.shape[0], n_iter=1000, test_size=.3, random_state=31)
-crossValidate(data_dict, features_list, rs)
+### training without feature scaling
+model_sets, score = trainModel(data_dict, features_list,
+                               feature_selection=feature_selection,
+                               classifiers=classifiers)
+
+### extract the pipeline
+pipeline = model_sets[1][1]
+tuning_score_kneighbors = score[1]
+
+### get the training and testing set
+features_train, features_test, labels_train, labels_test = trainTestSplit(data_dict, features_list)
+
+### prepare the cross validation
+sss = StratifiedShuffleSplit(labels_train, n_iter=1000, random_state=42)
+
+### set the parameters
+params_kbest = {"k_best__k": [1,2,3,4,5,6,7,8,9,10]}
+
+### fit and search
+estimator = GridSearchCV(pipeline, params_kbest, scoring='f1', cv=sss)
+estimator.fit(features_train, labels_train)
+
+### extract scores
+tuning_score_kbest = estimator.grid_scores_
+
+### get the best estimator
+clf = estimator.best_estimator_
+
+### check the model performance
+print "Model performance:"
+evaluateModel(clf.predict(features_test), labels_test)
 
 ### prepare for the test
 clf = clf
