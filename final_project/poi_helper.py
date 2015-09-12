@@ -8,7 +8,7 @@ from sklearn.grid_search import GridSearchCV
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 from sklearn.cross_validation import train_test_split, StratifiedShuffleSplit
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, MinMaxScaler, Normalizer
 from sklearn.linear_model import LinearRegression
 import sys
 import os
@@ -146,7 +146,7 @@ def personMapping(dict_list, dataset, features_list):
                 my_dataset[key] = item
     return my_dataset
 
-def featureLabelSplit(my_dataset, features_list, scaling=False):
+def featureLabelSplit(my_dataset, features_list, scaling='none'):
     """
         A simple function creates features and labels. If scaling
         is true, data will be scaled before splitting.
@@ -156,12 +156,18 @@ def featureLabelSplit(my_dataset, features_list, scaling=False):
     data = featureFormat(my_dataset, features_list, sort_keys = True)
     labels, features = targetFeatureSplit(data)
 
-    if scaling:
-        features = StandardScaler().fit_transform(features)
+    if scaling == 'standardscaler':
+        features == StandardScaler().fit_transform(features)
+    elif scaling == 'minmaxscaler':
+        features == MinMaxScaler().fit_transform(features)
+    elif scaling == 'normalier':
+        features == Normalizer().fit_transform(features)
+    else:
+        pass
 
     return features, labels
 
-def trainTestSplit(my_dataset, features_list, scaling=False):
+def trainTestSplit(my_dataset, features_list, scaling='none'):
     """
         A training and testing set split function.
 
@@ -219,7 +225,7 @@ def tuneEstimator(pipeline, param, features_train, features_test, labels_train, 
 
     return best_clf, labels_pred, tuned_scores
 
-def trainModel(my_dataset, features_list, feature_selection, classifiers, scaling=False):
+def trainModel(my_dataset, features_list, feature_selection, classifiers, scaling='none'):
     """
         A model training function.
 
@@ -239,63 +245,67 @@ def trainModel(my_dataset, features_list, feature_selection, classifiers, scalin
     """
 
     ### split the training and testing sets and clean outliers on training set
-    features_train, features_test, labels_train, labels_test = trainTestSplit(my_dataset, features_list, scaling)
+    features_train, features_test, labels_train, labels_test = trainTestSplit(my_dataset, features_list, scaling='none')
     cleaned_data, outliers = outlierCleaner(features_train, labels_train, percent=.05)
     labels_train, features_train = targetFeatureSplit(cleaned_data)
 
     trained_model, tuned_score, model_results = [], [], []
     count = 0
 
-    ### iter through feature selection and classification methods
-    for selection_method in feature_selection:
-        for item in classifiers:
-            count += 1
-            print "Model {} \n-working on classifier {}, using slection method {}".format(count, item[0], selection_method[0])
+    scalers = [('standardscaler', StandardScaler()),
+               ('minmaxscaler', MinMaxScaler()),
+               ('normalier', Normalizer())]
+    for scaler in scalers:
+        ### iter through feature selection and classification methods
+        for selection_method in feature_selection:
+            for item in classifiers:
+                count += 1
+                print "Model {} \n-working on classifier {}, using slection method {}".format(count, item[0], selection_method[0])
 
-            ### add a time function to calculate time used by each model
-            t0 = time()
+                ### add a time function to calculate time used by each model
+                t0 = time()
 
-            ### unpack name, function and parameters
-            classifier = item[:2]
-            param = item[2]
+                ### unpack name, function and parameters
+                classifier = item[:2]
+                param = item[2]
 
-            try:
-                ### build pipeline
-                pipeline = Pipeline([selection_method, classifier[:2]])
-
-                ### tune the model
                 try:
-                    sss = StratifiedShuffleSplit(labels_train, n_iter=100, random_state=42)
-                    print "--start tuning..."
-                    clf, labels_pred, grid_scores = tuneEstimator(pipeline, param, features_train, features_test, labels_train, cv=sss)
+                    ### build pipeline
+                    pipeline = Pipeline([scaler, selection_method, classifier[:2]])
 
-                    ### store the tuning results
-                    tuned_score.append(grid_scores)
+                    ### tune the model
+                    try:
+                        sss = StratifiedShuffleSplit(labels_train, n_iter=100, random_state=42)
+                        print "--start tuning..."
+                        clf, labels_pred, grid_scores = tuneEstimator(pipeline, param, features_train, features_test, labels_train, cv=sss)
 
-                    ### store model's information, including name, function, and parameters
-                    model_name = item[0] + " with " + selection_method[0]
-                    model_info = (model_name, clf)
-                    trained_model.append(model_info)
+                        ### store the tuning results
+                        tuned_score.append(grid_scores)
 
-                    t1 = time() - t0
-                    print "--training on {} complete, time used: {} \n--start cross validating...".format(model_name, t1)
+                        ### store model's information, including name, function, and parameters
+                        model_name = item[0] + " with " + selection_method[0] + ' with' + scaler[0]
+                        model_info = (model_name, clf)
+                        trained_model.append(model_info)
 
-                    ### print out evaluation scores
-                    accuracy, f1, precision, recall = crossValidate(my_dataset, features_list, clf, scaling)
+                        t1 = time() - t0
+                        print "--training on {} complete, time used: {} \n--start cross validating...".format(model_name, t1)
 
-                    ### claculate time used
-                    t2 = time() - t0 - t1
-                    print "cross validation complete, time used: {}".format(t2)
+                        ### print out evaluation scores
+                        accuracy, f1, precision, recall = crossValidate(my_dataset, features_list, clf, scaling)
 
-                    ### store the information of models
-                    model_results.append((count, scaling, selection_method[0], item[0], accuracy, f1, precision, recall, round((time() - t0), 3)))
-                    print ""
+                        ### claculate time used
+                        t2 = time() - t0 - t1
+                        print "cross validation complete, time used: {}".format(t2)
+
+                        ### store the information of models
+                        model_results.append((count, scaling, selection_method[0], item[0], accuracy, f1, precision, recall, round((time() - t0), 3)))
+                        print ""
+
+                    except Exception, e:
+                        print "--error on tuning: \n", e, "\n"
 
                 except Exception, e:
-                    print "--error on tuning: \n", e, "\n"
-
-            except Exception, e:
-                print "-error on classifying: \n", e, "\n"
+                    print "-error on classifying: \n", e, "\n"
 
     ### dump the model information into a csv file
     dumpResult(model_results)
@@ -347,7 +357,7 @@ def findBest(data):
 
     return ordered_data
 
-def crossValidate(my_dataset, features_list, clf, scaling=False):
+def crossValidate(my_dataset, features_list, clf, scaling='none'):
     """
         Take dataset, features list, estimator as inputs, run StratifiedShuffleSplit
         with n_iter = 1000, and calculate the scores.
