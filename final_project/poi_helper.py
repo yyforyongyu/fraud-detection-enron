@@ -214,7 +214,7 @@ def tuneEstimator(pipeline, param, features_train, features_test, labels_train, 
 
     return best_clf, labels_pred, tuned_scores
 
-def trainModel(my_dataset, features_list, feature_selection, classifiers, scalers):
+def trainModel(my_dataset, features_list, feature_selection, classifiers, scalers, filename='result.csv'):
     """
         A model training function.
 
@@ -295,24 +295,19 @@ def trainModel(my_dataset, features_list, feature_selection, classifiers, scaler
                     print "-error on classifying: \n", e, "\n"
 
     ### dump the model information into a csv file
-    dumpResult(model_results)
+    dumpResult(model_results, filename)
 
     return trained_model, tuned_score
 
-def dumpResult(data):
+def dumpResult(data, filename='result.csv'):
     """
         Take the results from running models and dump
         into a csv file named "result.csv"
     """
 
     ordered_data = findBest(data)
-    file_exists = os.path.isfile("result.csv")
 
-    ### remove old file
-    if file_exists:
-            os.remove("result.csv")
-
-    with open("result.csv", "a") as f:
+    with open(filename, "a") as f:
         writer = csv.writer(f)
 
         ### write row for a new file
