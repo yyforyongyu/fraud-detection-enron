@@ -8,7 +8,6 @@ from sklearn.grid_search import GridSearchCV
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 from sklearn.cross_validation import train_test_split, StratifiedShuffleSplit
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler, MinMaxScaler, Normalizer
 from sklearn.linear_model import LinearRegression
 import sys
 import os
@@ -146,28 +145,18 @@ def personMapping(dict_list, dataset, features_list):
                 my_dataset[key] = item
     return my_dataset
 
-def featureLabelSplit(my_dataset, features_list, scaling='none'):
+def featureLabelSplit(my_dataset, features_list):
     """
-        A simple function creates features and labels. If scaling
-        is true, data will be scaled before splitting.
+        A simple function creates features and labels.
 
         Return features and labels
     """
     data = featureFormat(my_dataset, features_list, sort_keys = True)
     labels, features = targetFeatureSplit(data)
 
-    if scaling == 'standardscaler':
-        features == StandardScaler().fit_transform(features)
-    elif scaling == 'minmaxscaler':
-        features == MinMaxScaler().fit_transform(features)
-    elif scaling == 'normalier':
-        features == Normalizer().fit_transform(features)
-    else:
-        pass
-
     return features, labels
 
-def trainTestSplit(my_dataset, features_list, scaling='none'):
+def trainTestSplit(my_dataset, features_list):
     """
         A training and testing set split function.
 
@@ -177,7 +166,7 @@ def trainTestSplit(my_dataset, features_list, scaling='none'):
 
         Return training and testing datasets.
     """
-    features, labels = featureLabelSplit(my_dataset, features_list, scaling)
+    features, labels = featureLabelSplit(my_dataset, features_list)
     features_train, features_test, labels_train, labels_test = train_test_split(features, labels, test_size=0.2, random_state=42)
 
     ### clean outliers
@@ -225,7 +214,7 @@ def tuneEstimator(pipeline, param, features_train, features_test, labels_train, 
 
     return best_clf, labels_pred, tuned_scores
 
-def trainModel(my_dataset, features_list, feature_selection, classifiers, scaling='none'):
+def trainModel(my_dataset, features_list, feature_selection, classifiers, scalers):
     """
         A model training function.
 
@@ -238,23 +227,18 @@ def trainModel(my_dataset, features_list, feature_selection, classifiers, scalin
         the model based on accuracy score, precision score,
         recall score, and f1 score.
 
-        If scaling is True, it will scale features before processing.
-
         Return a list of models and tuned scores, and writes a csv
         file to store the results.
     """
 
     ### split the training and testing sets and clean outliers on training set
-    features_train, features_test, labels_train, labels_test = trainTestSplit(my_dataset, features_list, scaling='none')
+    features_train, features_test, labels_train, labels_test = trainTestSplit(my_dataset, features_list)
     cleaned_data, outliers = outlierCleaner(features_train, labels_train, percent=.05)
     labels_train, features_train = targetFeatureSplit(cleaned_data)
 
     trained_model, tuned_score, model_results = [], [], []
     count = 0
 
-    scalers = [('standardscaler', StandardScaler()),
-               ('minmaxscaler', MinMaxScaler()),
-               ('normalier', Normalizer())]
     for scaler in scalers:
         ### iter through feature selection and classification methods
         for selection_method in feature_selection:
@@ -271,7 +255,10 @@ def trainModel(my_dataset, features_list, feature_selection, classifiers, scalin
 
                 try:
                     ### build pipeline
-                    pipeline = Pipeline([scaler, selection_method, classifier[:2]])
+                    if scaler[0] == 'none':
+                        pipeline = Pipeline([selection_method, classifier[:2]])
+                    else:
+                        pipeline = Pipeline([scaler, selection_method, classifier[:2]])
 
                     ### tune the model
                     try:
@@ -291,14 +278,14 @@ def trainModel(my_dataset, features_list, feature_selection, classifiers, scalin
                         print "--training on {} complete, time used: {} \n--start cross validating...".format(model_name, t1)
 
                         ### print out evaluation scores
-                        accuracy, f1, precision, recall = crossValidate(my_dataset, features_list, clf, scaling)
+                        accuracy, f1, precision, recall = crossValidate(my_dataset, features_list, clf)
 
                         ### claculate time used
                         t2 = time() - t0 - t1
                         print "cross validation complete, time used: {}".format(t2)
 
                         ### store the information of models
-                        model_results.append((count, scaling, selection_method[0], item[0], accuracy, f1, precision, recall, round((time() - t0), 3)))
+                        model_results.append((count, scaler[0], selection_method[0], item[0], accuracy, f1, precision, recall, round((time() - t0), 3)))
                         print ""
 
                     except Exception, e:
@@ -357,7 +344,7 @@ def findBest(data):
 
     return ordered_data
 
-def crossValidate(my_dataset, features_list, clf, scaling='none'):
+def crossValidate(my_dataset, features_list, clf):
     """
         Take dataset, features list, estimator as inputs, run StratifiedShuffleSplit
         with n_iter = 1000, and calculate the scores.
@@ -365,7 +352,7 @@ def crossValidate(my_dataset, features_list, clf, scaling='none'):
         return accuracy, f1, recall, precision scores.
     """
 
-    features, labels = featureLabelSplit(my_dataset, features_list, scaling)
+    features, labels = featureLabelSplit(my_dataset, features_list)
     sss = StratifiedShuffleSplit(labels, n_iter=1000, random_state=42)
 
     PERF_FORMAT_STRING = "Accuracy: {}, Precision: {}, Recall: {}, F1: {}, F2: {}"
@@ -436,3 +423,23 @@ def gridScoreReader(tuning_score):
         header.append(param.split("__")[1])
     header += ['mean', 'std']
     return pd.DataFrame(result, columns = header)
+
+def stdMeanReader(features, features_list, scaler=None):
+    """
+        Take features and features_list as inputs and turn them into
+        a pandas dataframe. Use the scaler to transform features.
+        Calculate the mean and standard deviations on each feature.
+
+        Return a pandas dataframe of names, mean, and standard deviation
+        of each feature.
+    """
+    if scaler == None:
+        pass
+    else:
+        features = scaler.fit_transform(features)
+        
+    df_data = pd.DataFrame(features, columns = features_list[1:])
+
+    result = [(features_list[1:][i], round(df_data.mean()[i], 4), round(df_data.std()[i], 4)) 
+              for i in range(len(df_data.mean()))]
+    return pd.DataFrame(result, columns = ['feature', 'mean', 'std']).sort(['std'], ascending = [0])
