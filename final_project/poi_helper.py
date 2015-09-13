@@ -244,7 +244,7 @@ def trainModel(my_dataset, features_list, feature_selection, classifiers, scaler
         for selection_method in feature_selection:
             for item in classifiers:
                 count += 1
-                print "Model {} \n-working on classifier {}, using slection method {}".format(count, item[0], selection_method[0])
+                print "Model {} \n-working on classifier {}, using slection method {}, feature scaling {}".format(count, item[0], selection_method[0], scaler[0])
 
                 ### add a time function to calculate time used by each model
                 t0 = time()
@@ -270,7 +270,7 @@ def trainModel(my_dataset, features_list, feature_selection, classifiers, scaler
                         tuned_score.append(grid_scores)
 
                         ### store model's information, including name, function, and parameters
-                        model_name = item[0] + " with " + selection_method[0] + ' with' + scaler[0]
+                        model_name = item[0] + " with " + selection_method[0] + ' with ' + scaler[0]
                         model_info = (model_name, clf)
                         trained_model.append(model_info)
 
