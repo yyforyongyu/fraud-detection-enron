@@ -415,7 +415,7 @@ def gridScoreReader(tuning_score):
         tuned_result.append(round(np.std(item[2]), 4))
         result.append(tuned_result)
     for param in params:
-        header.append(param.split("__")[1])
+        header.append(param.split("__")[2])
     header += ['mean', 'std']
     return pd.DataFrame(result, columns = header)
 
