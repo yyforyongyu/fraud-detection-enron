@@ -168,7 +168,8 @@ t0 = time()
 print "start tuning on pca..."
 
 ### set the parameters
-params_pca = {"extra_tree_with_pca__pca__n_components": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]}
+params_pca = {"extra_tree_with_pca__pca__n_components": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+              "extra_tree_with_pca__pca__whiten": [True, False]}
 
 ### fit and search
 estimator = GridSearchCV(clf, params_pca, scoring='f1', cv=sss)
