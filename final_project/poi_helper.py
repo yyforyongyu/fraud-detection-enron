@@ -239,8 +239,8 @@ def trainModel(my_dataset, features_list, feature_selection, classifiers, scaler
     trained_model, tuned_score, model_results = [], [], []
     count = 0
 
+    ### iter through feature selection and classification methods
     for scaler in scalers:
-        ### iter through feature selection and classification methods
         for selection_method in feature_selection:
             for item in classifiers:
                 count += 1
@@ -307,7 +307,7 @@ def dumpResult(data, filename='result.csv'):
 
     ordered_data = findBest(data)
 
-    with open(filename, "a") as f:
+    with open(filename, "w") as f:
         writer = csv.writer(f)
 
         ### write row for a new file
