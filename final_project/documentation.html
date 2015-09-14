@@ -478,7 +478,7 @@ $$Accuracy: 0.7643, Precision: 0.3042, Recall: 0.5965, F1: 0.4029, F2: 0.5003$$<
 <p>For the final model, three algorithms are carefully tuned. For LinearSVC, the parameters tuned are 'C', 'tol', and 'max_iter'. For ExtraTreeClassifier, the parameters tuned are 'n_estimators' and 'max_features'. For PCA, the parameter n_components is tuned.</p>
 <p>When tuning LinearSVC, C was dominating the performance alone. The algorithm was found to be best at C = 0.1. At C = 1.0, tol started to make positive effect. At C = 3.0, model performance decreased when tol changed from 0.1 to 1.0. At C = 10.0, model performance decreased when tol changed from 0.01 to 0.1, and increased when it got to 1.0. For all the fitting, max_iter didn't take any effect on performance.</p>
 <p>When tuning ExtraTreeClassifer, the performance generally went up when n_estimators increased, and had a complicated relationship with max_features. However, at max_features = 2 and n_estimators = 1, a best performance was found within the given range.</p>
-<p>When tuning PCA, the n_components had no effect on model performance, hence n_components = 1 was chosen for the final model.</p>
+<p>When tuning PCA, the n_components had no effect on model performance when whiten = False. When whiten = True, the performance stayed the same when n_components was less than 6, and started to decrease while n_components was greater than 5 and increased. The best parameters were found to be n_components = 1 and whiten = True.</p>
 
 </div>
 </div>
@@ -500,10 +500,10 @@ $$Accuracy: 0.7643, Precision: 0.3042, Recall: 0.5965, F1: 0.4029, F2: 0.5003$$<
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Evaluation">Evaluation<a class="anchor-link" href="#Evaluation">&#182;</a></h2><p>The evaluation metrics in this analysis used are accuaracy score, f1 score, precision score and recall score.
-The final model has an accuracy score of 0.7285, which means 72.85% of the predictions are found to be true. However, using this metrix won't give us very valuable information. The dataset is heavily imbalance and guessing all outcomes to be non-POIs would give an accuracy of 86.2% already, this is why we need use precision and recall scores instead.</p>
-<p>With a precision score of 0.3, it tells us that if this model predicts 10 POIs, then the chance would be 3 people who are truely POIs and the rest 7 are innocent. On the other hand, with a recall score of 0.78, this model can find 78% of all real POIs in prediction. This model is good at finding bad guys, with the price of high probability(0.7) in calumniating someone.</p>
-<p>Finally, there's always a tradeoff between precision and recall, f1 comes and measure how well the tradeoff is. With a f1 score of 0.43, this model is ok, while more improvements could be applied such as better feature engineering.</p>
+<h2 id="Evaluation">Evaluation<a class="anchor-link" href="#Evaluation">&#182;</a></h2><p>The evaluation metrics in this analysis used are accuaracy score, f1 score, precision score and recall score.</p>
+<p>The final model has an accuracy score of 0.7404, which means 74.04% of the predictions are found to be true. However, using this metrix won't give us very valuable information. The dataset is heavily imbalance and guessing all outcomes to be non-POIs would give an accuracy of 86.2% already, this is why we need use precision and recall scores instead.</p>
+<p>With a precision score of 0.31, it tells us that if this model predicts 100 POIs, then the chance would be 31 people who are truely POIs and the rest 69 are innocent. On the other hand, with a recall score of 0.76, this model can find 76% of all real POIs in prediction. This model is good at finding bad guys, with the price of high probability(0.69) in calumniating someone.</p>
+<p>Finally, there's always a tradeoff between precision and recall, f1 comes and measure how well the tradeoff is. With a f1 score of 0.44, this model is ok, while more improvements could be applied such as better feature engineering.</p>
 
 </div>
 </div>
