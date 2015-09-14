@@ -177,10 +177,11 @@ div#notebook {
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Identifying-Fraud-from-Enron-Email">Identifying Fraud from Enron Email<a class="anchor-link" href="#Identifying-Fraud-from-Enron-Email">&#182;</a></h1><p>This is a report on the process of builing estimators for Fraud Detection using machine learning.</p>
+<h1 id="Identifying-Fraud-from-Enron-Email">Identifying Fraud from Enron Email<a class="anchor-link" href="#Identifying-Fraud-from-Enron-Email">&#182;</a></h1><h2 id="Yong-Yu">Yong Yu<a class="anchor-link" href="#Yong-Yu">&#182;</a></h2><p>This is a report on the process of builing estimators for Fraud Detection using machine learning.</p>
 <p>A more compact and summurized report can be found as 
 <a href='https://raw.githubusercontent.com/yyforyongyu/nanodegree-machine-learning/master/final_project/documentation.html' target='_blank'>Documentation (html)</a>, or 
 <a href='https://github.com/yyforyongyu/nanodegree-machine-learning/blob/master/final_project/documentation.ipynb' target='_blank'> Documentation (ipynb) </a>.</p>
+<hr>
 
 </div>
 </div>
@@ -12068,37 +12069,6 @@ time used:  181.626388073
 
 </div>
 
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[50]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython2"><pre><span class="k">def</span> <span class="nf">gridScoreReader</span><span class="p">(</span><span class="n">tuning_score</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Take grid_scores and format it into a pandas dataframe.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">header</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">tuning_score</span><span class="p">:</span>
-        <span class="n">tuned_result</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">params</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
-        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">item</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
-            <span class="n">tuned_result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-        <span class="n">tuned_result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">4</span><span class="p">))</span>
-        <span class="n">tuned_result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="mi">2</span><span class="p">]),</span> <span class="mi">4</span><span class="p">))</span>
-        <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tuned_result</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">params</span><span class="p">:</span>
-        <span class="n">header</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">param</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;__&quot;</span><span class="p">)[</span><span class="mi">2</span><span class="p">])</span>
-    <span class="n">header</span> <span class="o">+=</span> <span class="p">[</span><span class="s">&#39;mean&#39;</span><span class="p">,</span> <span class="s">&#39;std&#39;</span><span class="p">]</span>
-    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">columns</span> <span class="o">=</span> <span class="n">header</span><span class="p">)</span>
-</pre></div>
-
-</div>
 </div>
 </div>
 
