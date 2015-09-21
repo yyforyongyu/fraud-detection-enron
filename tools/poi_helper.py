@@ -155,7 +155,7 @@ def featureLabelSplit(my_dataset, features_list):
 
     return features, labels
 
-def trainTestSplit(my_dataset, features_list):
+def trainTestSplit(my_dataset, features_list, percent=.05):
     """
         A training and testing set split function.
 
@@ -169,7 +169,7 @@ def trainTestSplit(my_dataset, features_list):
     features_train, features_test, labels_train, labels_test = train_test_split(features, labels, test_size=0.2, random_state=42)
 
     ### clean outliers
-    cleaned_data, outliers = outlierCleaner(features_train, labels_train, percent=.05)
+    cleaned_data, outliers = outlierCleaner(features_train, labels_train, percent)
     labels_train, features_train = targetFeatureSplit(cleaned_data)
 
     return features_train, features_test, labels_train, labels_test
