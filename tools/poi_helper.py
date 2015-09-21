@@ -213,30 +213,30 @@ def tuneEstimator(pipeline, param, features_train, features_test, labels_train, 
 
     return best_clf, labels_pred, tuned_scores
 
-def makePipelines(scalers, feature_selections, classifiers, pca=False):
-
+def makePipelines(scalers, pca_methods, feature_selections, classifiers):
     pipeline_info = []
     for scaler in scalers:
-        for feature_selection in feature_selections:
-            for classifier in classifier:
-                params = classifier[2]
-                if pca:
-                    if scaler[0] == "none":
-                        pipeline = [pca, feature_selection, classifier[:2]]
+        for pca in pca_methods:
+            for feature_selection in feature_selections:
+                for classifier in classifiers:
+                    params = classifier[2]
+                    if pca[0] == "none":
+                        if scaler[0] == "none":
+                            pipeline = Pipeline([feature_selection, classifier[:2]])
+                        else:
+                            pipeline = Pipeline([scaler, feature_selection, classifier[:2]])
+
+                        name = (scaler[0], "False", feature_selection[0], classifier[0])
+                        pipeline_info.append((pipeline, name, params))
+
                     else:
-                        pipeline = [scaler, pca, feature_selection, classifier[:2]]
+                        if scaler[0] == "none":
+                            pipeline = Pipeline([pca, feature_selection, classifier[:2]])
+                        else:
+                            pipeline = Pipeline([scaler, pca, feature_selection, classifier[:2]])
 
-                    name = (scaler[0], pca[0], feature_selection[0], classifier[0])
-                    pipeline_info.append((pipeline, name, params))
-
-                else:
-                    if scaler[0] == "none":
-                        pipeline = [feature_selection, classifier[:2]]
-                    else:
-                        pipeline = [scaler, feature_selection, classifier[:2]]
-
-                    name = (scaler[0], "False", feature_selection[0], classifier[0])
-                    pipeline_info.append((pipeline, name, params))
+                        name = (scaler[0], pca[0], feature_selection[0], classifier[0])
+                        pipeline_info.append((pipeline, name, params))
 
     return pipeline_info
 
