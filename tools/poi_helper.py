@@ -240,9 +240,6 @@ def makePipelines(scalers, feature_selections, classifiers, pca=False):
 
     return pipeline_info
 
-
-
-
 def trainModel(my_dataset, features_list, pipelines, filename='result.csv'):
     """
         A model training function.
@@ -327,7 +324,7 @@ def dumpResult(data, filename='result.csv'):
         writer = csv.writer(f)
 
         ### write row for a new file
-        writer.writerow(["model", "scaled", "feature_selection_method",
+        writer.writerow(["model", "scaler", "pca", "feature_selection_method",
                          "classification_method", "accuracy_score", "f1_score",
                          "precision_score", "recall_score", "time_used"])
         for model in ordered_data:
