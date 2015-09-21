@@ -12,7 +12,6 @@ from sklearn.linear_model import LinearRegression
 import sys
 import os
 import csv
-sys.path.append("../tools/")
 from feature_format import featureFormat, targetFeatureSplit
 import numpy as np
 import pandas as pd

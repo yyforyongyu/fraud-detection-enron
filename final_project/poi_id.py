@@ -1,8 +1,8 @@
 #!/usr/bin/python
 
+sys.path.append("../tools/")
 from poi_helper import *
 import pickle
-#sys.path.append("../tools/")
 from tester import dump_classifier_and_data, test_classifier
 
 ### Load the dictionary containing the dataset
