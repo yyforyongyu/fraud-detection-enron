@@ -213,7 +213,37 @@ def tuneEstimator(pipeline, param, features_train, features_test, labels_train, 
 
     return best_clf, labels_pred, tuned_scores
 
-def trainModel(my_dataset, features_list, feature_selection, classifiers, scalers, filename='result.csv'):
+def makePipelines(scalers, feature_selections, classifiers, pca=False):
+
+    pipeline_info = []
+    for scaler in scalers:
+        for feature_selection in feature_selections:
+            for classifier in classifier:
+                params = classifier[2]
+                if pca:
+                    if scaler[0] == "none":
+                        pipeline = [pca, feature_selection, classifier[:2]]
+                    else:
+                        pipeline = [scaler, pca, feature_selection, classifier[:2]]
+
+                    name = (scaler[0], pca[0], feature_selection[0], classifier[0])
+                    pipeline_info.append((pipeline, name, params))
+
+                else:
+                    if scaler[0] == "none":
+                        pipeline = [feature_selection, classifier[:2]]
+                    else:
+                        pipeline = [scaler, feature_selection, classifier[:2]]
+
+                    name = (scaler[0], "False", feature_selection[0], classifier[0])
+                    pipeline_info.append((pipeline, name, params))
+
+    return pipeline_info
+
+
+
+
+def trainModel(my_dataset, features_list, pipelines, filename='result.csv'):
     """
         A model training function.
 
@@ -238,60 +268,47 @@ def trainModel(my_dataset, features_list, feature_selection, classifiers, scaler
     trained_model, tuned_score, model_results = [], [], []
     count = 0
 
-    ### iter through feature selection and classification methods
-    for scaler in scalers:
-        for selection_method in feature_selection:
-            for item in classifiers:
-                count += 1
-                print "Model {} \n-working on classifier {}, using slection method {}, feature scaling {}".format(count, item[0], selection_method[0], scaler[0])
+    ### iter through each pipeline
+    for pipeline_info in pipelines:
+        pipeline = pipeline_info[0]
+        name = pipeline_info[1]
+        params = pipeline_info[2]
+        count += 1
+        print "Model {} \n-working on classifier {}, using slection method {}, feature scaling {}, PCA {}".format(count, name[3], name[2], name[0], name[1])
 
-                ### add a time function to calculate time used by each model
-                t0 = time()
+        ### add a time function to calculate time used by each model
+        t0 = time()
 
-                ### unpack name, function and parameters
-                classifier = item[:2]
-                param = item[2]
+        try:
+            sss = StratifiedShuffleSplit(labels_train, n_iter=100, random_state=42)
+            print "--start tuning..."
+            clf, labels_pred, grid_scores = tuneEstimator(pipeline, params, features_train, features_test, labels_train, cv=sss)
 
-                try:
-                    ### build pipeline
-                    if scaler[0] == 'none':
-                        pipeline = Pipeline([selection_method, classifier[:2]])
-                    else:
-                        pipeline = Pipeline([scaler, selection_method, classifier[:2]])
+            ### store the tuning results
+            tuned_score.append(grid_scores)
 
-                    ### tune the model
-                    try:
-                        sss = StratifiedShuffleSplit(labels_train, n_iter=100, random_state=42)
-                        print "--start tuning..."
-                        clf, labels_pred, grid_scores = tuneEstimator(pipeline, param, features_train, features_test, labels_train, cv=sss)
+            ### store model's information, including name, function, and parameters
+            model_name = name[3] + " with " + name[2] + ' with ' + name[0] + ' with ' + name[1]
+            model_info = (model_name, clf)
+            trained_model.append(model_info)
 
-                        ### store the tuning results
-                        tuned_score.append(grid_scores)
+            t1 = time() - t0
+            print "--training on {} complete, time used: {} \n--start cross validating...".format(model_name, t1)
 
-                        ### store model's information, including name, function, and parameters
-                        model_name = item[0] + " with " + selection_method[0] + ' with ' + scaler[0]
-                        model_info = (model_name, clf)
-                        trained_model.append(model_info)
+            ### print out evaluation scores
+            accuracy, f1, precision, recall = crossValidate(my_dataset, features_list, clf)
 
-                        t1 = time() - t0
-                        print "--training on {} complete, time used: {} \n--start cross validating...".format(model_name, t1)
+            ### claculate time used
+            t2 = time() - t0 - t1
+            print "cross validation complete, time used: {}".format(t2)
 
-                        ### print out evaluation scores
-                        accuracy, f1, precision, recall = crossValidate(my_dataset, features_list, clf)
+            ### store the information of models
+            ### model number, scaler, pca, feature selection, classifier, accuracy, f1, precision, recall, time used
+            model_results.append((count, name[0], name[1], name[2], mame[3], accuracy, f1, precision, recall, round((time() - t0), 3)))
+            print ""
 
-                        ### claculate time used
-                        t2 = time() - t0 - t1
-                        print "cross validation complete, time used: {}".format(t2)
-
-                        ### store the information of models
-                        model_results.append((count, scaler[0], selection_method[0], item[0], accuracy, f1, precision, recall, round((time() - t0), 3)))
-                        print ""
-
-                    except Exception, e:
-                        print "--error on tuning: \n", e, "\n"
-
-                except Exception, e:
-                    print "-error on classifying: \n", e, "\n"
+        except Exception, e:
+            print "--error on tuning: \n", e, "\n"
 
     ### dump the model information into a csv file
     dumpResult(model_results, filename)
