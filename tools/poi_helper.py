@@ -231,11 +231,11 @@ def makePipelines(scalers, pca_methods, feature_selections, classifiers):
 
                     else:
                         if scaler[0] == "none":
-                            pipeline = Pipeline([pca, feature_selection, classifier[:2]])
+                            pipeline = Pipeline([feature_selection, pca, classifier[:2]])
                         else:
-                            pipeline = Pipeline([scaler, pca, feature_selection, classifier[:2]])
+                            pipeline = Pipeline([scaler, feature_selection, pca, classifier[:2]])
 
-                        name = (scaler[0], pca[0], feature_selection[0], classifier[0])
+                        name = (scaler[0], feature_selection[0], pca[0], classifier[0])
                         pipeline_info.append((pipeline, name, params))
 
     return pipeline_info
@@ -271,7 +271,7 @@ def trainModel(my_dataset, features_list, pipelines, filename='result.csv'):
         name = pipeline_info[1]
         params = pipeline_info[2]
         count += 1
-        print "Model {} \n-working on classifier {}, using slection method {}, feature scaling {}, PCA {}".format(count, name[3], name[2], name[0], name[1])
+        print "Model {} \n-working on classifier {}, using slection method {}, feature scaling {}, PCA {}".format(count, name[3], name[1], name[0], name[2])
 
         ### add a time function to calculate time used by each model
         t0 = time()
@@ -300,8 +300,8 @@ def trainModel(my_dataset, features_list, pipelines, filename='result.csv'):
             print "cross validation complete, time used: {}".format(t2)
 
             ### store the information of models
-            ### model number, scaler, pca, feature selection, classifier, accuracy, f1, precision, recall, time used
-            model_results.append((count, name[0], name[1], name[2], mame[3], accuracy, f1, precision, recall, round((time() - t0), 3)))
+            ### model number, scaler, feature selection, pca, classifier, accuracy, f1, precision, recall, time used
+            model_results.append((count, name[0], name[1], name[2], name[3], accuracy, f1, precision, recall, round((time() - t0), 3)))
             print ""
 
         except Exception, e:
@@ -324,7 +324,7 @@ def dumpResult(data, filename='result.csv'):
         writer = csv.writer(f)
 
         ### write row for a new file
-        writer.writerow(["model", "scaler", "pca", "feature_selection_method",
+        writer.writerow(["model", "scaler",  "feature_selection_method", "pca",
                          "classification_method", "accuracy_score", "f1_score",
                          "precision_score", "recall_score", "time_used"])
         for model in ordered_data:
@@ -352,7 +352,7 @@ def findBest(data):
 
     return ordered_data
 
-def crossValidate(my_dataset, features_list, clf):
+def crossValidate(my_dataset, features_list, clf, percent=.05):
     """
         Take dataset, features list, estimator as inputs, run StratifiedShuffleSplit
         with n_iter = 1000, and calculate the scores.
@@ -375,7 +375,7 @@ def crossValidate(my_dataset, features_list, clf):
         labels_train = [labels[ii] for ii in train_index]
         labels_test = [labels[ii] for ii in test_index]
 
-        cleaned_data, outliers = outlierCleaner(features_train, labels_train, percent=.05)
+        cleaned_data, outliers = outlierCleaner(features_train, labels_train, percent)
         labels_train, features_train = targetFeatureSplit(cleaned_data)
 
         try:

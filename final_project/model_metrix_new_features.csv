@@ -1,1 +1,12 @@
 model,scaler,pca,feature_selection_method,classification_method,accuracy_score,f1_score,precision_score,recall_score,time_used
+6,none,pca,k_best,k_neighbors,0.8655,0.2672,0.4881,0.184,12.13
+2,none,False,k_best,k_neighbors,0.8655,0.2672,0.4881,0.184,14.064
+21,minmaxscaler,pca,k_best,linear_svc,0.7601,0.3346,0.2655,0.4525,31.256
+4,none,False,extra_tree,k_neighbors,0.8489,0.2421,0.3653,0.181,39.964
+8,none,pca,extra_tree,k_neighbors,0.8689,0.2809,0.5232,0.192,41.734
+19,minmaxscaler,False,extra_tree,linear_svc,0.7729,0.2475,0.2217,0.28,95.79
+11,standardscaler,False,extra_tree,linear_svc,0.7412,0.2503,0.2039,0.324,100.224
+23,minmaxscaler,pca,extra_tree,linear_svc,0.7023,0.2857,0.2101,0.4465,100.397
+7,none,pca,extra_tree,linear_svc,0.6824,0.3237,0.226,0.57,124.355
+5,none,pca,k_best,linear_svc,0.7064,0.3575,0.2524,0.6125,130.87
+3,none,False,extra_tree,linear_svc,0.7603,0.2436,0.2103,0.2895,152.383
