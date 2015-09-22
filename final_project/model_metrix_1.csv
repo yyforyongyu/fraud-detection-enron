@@ -1,0 +1,15 @@
+model,scaler,feature_selection_method,pca,classification_method,accuracy_score,f1_score,precision_score,recall_score,time_used
+2,none,False,k_best,k_neighbors,0.8724,0.2869,0.5629,0.1925,10.723
+6,none,k_best,pca,k_neighbors,0.8724,0.2869,0.5629,0.1925,12.214
+17,minmaxscaler,False,k_best,linear_svc,0.7785,0.2216,0.2085,0.2365,32.19
+21,minmaxscaler,k_best,pca,linear_svc,0.7662,0.3321,0.2682,0.436,32.241
+9,standardscaler,False,k_best,linear_svc,0.787,0.2281,0.2207,0.236,33.343
+13,standardscaler,k_best,pca,linear_svc,0.7755,0.2283,0.2107,0.249,36.016
+4,none,False,extra_tree,k_neighbors,0.8556,0.2833,0.4188,0.214,41.663
+8,none,extra_tree,pca,k_neighbors,0.8556,0.2833,0.4188,0.214,42.829
+19,minmaxscaler,False,extra_tree,linear_svc,0.8045,0.2641,0.2651,0.263,100.082
+11,standardscaler,False,extra_tree,linear_svc,0.7473,0.2623,0.2147,0.337,100.251
+7,none,extra_tree,pca,linear_svc,0.7391,0.2621,0.2104,0.3475,102.643
+15,standardscaler,extra_tree,pca,linear_svc,0.7627,0.3539,0.2778,0.4875,102.666
+23,minmaxscaler,extra_tree,pca,linear_svc,0.7631,0.239,0.2091,0.279,105.068
+5,none,k_best,pca,linear_svc,0.8077,0.2646,0.2699,0.2595,122.152
