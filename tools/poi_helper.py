@@ -309,7 +309,8 @@ def trainModel(my_dataset, features_list, pipelines, filename='result.csv'):
             print "--error on tuning: \n", e, "\n"
 
     ### dump the model information into a csv file
-    dumpResult(model_results, filename)
+    if filename != None:
+        dumpResult(model_results, filename)
 
     return trained_model, tuned_score
 
