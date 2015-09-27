@@ -1,4 +1,7 @@
-Enron Fruad Detection
+# Identifying Fraud from Enron Email
+Yong Yu
+This is a report on the process of builing estimators for Fraud Detection using machine learning.
+A more compact and summurized report can be found as Documentation (html), or Documentation (ipynb).
 ==============
 
 A nanodegree project. All the files are under final_project/ folder, a list of files are explained as below.
