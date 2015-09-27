@@ -24,3 +24,5 @@ In this report, there are series of investigations performed to make a robust, s
 - cross-validation on the final estimator.
 
 Several helper functions are built for this project in poi_helper.py, which can be found in tools/. For more details, report poi_id.ipynb has all the thoughts and steps in building these functions.
+
+## Description of Files
