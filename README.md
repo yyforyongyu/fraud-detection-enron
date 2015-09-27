@@ -1,11 +1,14 @@
 # Identifying Fraud from Enron Email
 
-This is a report on the process of builing estimators for Fraud Detection using machine learning.
-A more compact and summurized report can be found as Documentation (html), or Documentation (ipynb).
+## About This Project
 
-==============
+The goal of this project is to identify whether a person is guilty for the notorious Enron Fraud, using publicly available information like finacial incomes and emails.
 
-## Overview
+From oil-trading, bandwidth trading, and weather trading with market-to-market accounting, Enron has moved its hands to a variety of commodities, got in touch with politicians like George W. Bush, and caused a great loss to the public, including the California electricity shortage. All these information can be useful if text learning was applied, and certain patterns could be found out like, a pattern indicating a decision-making person could very likely be a person of interest. However, this is not applied in this analysis since it's a more advanced topic.
+
+This analysis used a finacial dataset containing people's salary, stock information, and so on. During Enron Fraud, people like Jefferey Skilling, Key Lay, and Fastow all have dumped large amounts of stock options, and they are all guilty. This information can be very helpful to check on other person of interest, and can be easily refelected in the dataset. This is also where machine learning comes into play. By creating models which calculate relationships between a person of interest and its available quantitative data, machine learning tries to find and memorize a pattern that helps us identify a guilty person in the future.
+
+## Overview of Main Report
 
 In this report, there are series of investigations performed to make a robust, strong final estimator to predict a person-of-interest(poi). These include,
 - an overview of the dataset.
@@ -18,28 +21,4 @@ In this report, there are series of investigations performed to make a robust, s
 - tuning algorithms using F1 score as evaluation metric.
 - cross-validation on the final estimator.
 
-Several helper functions are built for this project in poi_helper.py. Since this report only focuses on methodology in machine learning, we will not cover them here. For more details, report poi_id.ipynb has all the thoughts and steps in building these functions.
-
-
-A nanodegree project. All the files are under final_project/ folder, a list of files are explained as below.
-
-## project_5_machine_learning.html
-This is the detailed report for this project which contains all the information needed. It is highly recommeneded to use this report over others.
-
-## project_5_machine_learning.ipynb
-A notebook file to generate the report.
-
-## poi_id.py
-A simplified version of the report.
-
-## poi_helper.py
-Several helper functions in support for poi_id.py.
-
-## documentation.html
-This is the documentation for all the work.
-
-## documentation.ipynb
-A notebook file to generate the documentation.
-
-## poi_id.ipynb
-A notebook file has the draft to the final report. This report documented the thoughts behind this machine learning.
+Several helper functions are built for this project in poi_helper.py, which can be found in tools/. For more details, report poi_id.ipynb has all the thoughts and steps in building these functions.
