@@ -4,12 +4,13 @@ import sys
 sys.path.append("../tools/")
 from poi_helper import *
 import pickle
+sys.path.append("../test/")
 from tester import dump_classifier_and_data, test_classifier
 import warnings
 warnings.filterwarnings("ignore")
 
 ### Load the dictionary containing the dataset
-data_dict = pickle.load(open("final_project_dataset.pkl", "r") )
+data_dict = pickle.load(open("../datasets/final_project_dataset.pkl", "r") )
 
 # remove the outlier 'TOTAL'
 data_dict.pop("TOTAL")
