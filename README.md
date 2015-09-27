@@ -10,7 +10,7 @@ This analysis used a finacial dataset containing people's salary, stock informat
 
 ## Overview of Main Report
 
-The report is under directory documentations, named as "training_main.html". For more compact and summerized reporting, please check "documentation.html" in the same directory.
+The report is under directory documentations, named as "training_main.html". For more compact and summarized reporting, please check "documentation.html" in the same directory.
 
 In this report, there are series of investigations performed to make a robust, strong final estimator to predict a person-of-interest(poi). These include,
 - an overview of the dataset.
