@@ -10,7 +10,11 @@ This analysis used a finacial dataset containing people's salary, stock informat
 
 ## Overview of Main Report
 
-The report is under directory documentations, named as "training_main.html". For more compact and summarized reporting, please check "documentation.html" in the same directory.
+The report is under directory documentations, named as ["training_main.html"](https://github.com/yyforyongyu/fraud-detection-enron/blob/master/documentations/training_main.html). For more compact and summarized reporting, please check ["documentation.html"](https://github.com/yyforyongyu/fraud-detection-enron/blob/master/documentations/documentation.html) in the same directory.
+
+To view the reports in repo, please use the following links,
+[summary](https://github.com/yyforyongyu/fraud-detection-enron/blob/master/main/documentation.ipynb)
+[detailed report](https://github.com/yyforyongyu/fraud-detection-enron/blob/master/main/training_main.ipynb)
 
 In this report, there are series of investigations performed to make a robust, strong final estimator to predict a person-of-interest(poi). These include,
 - an overview of the dataset.
@@ -24,5 +28,3 @@ In this report, there are series of investigations performed to make a robust, s
 - cross-validation on the final estimator.
 
 Several helper functions are built for this project in poi_helper.py, which can be found in tools/. For more details, report poi_id.ipynb has all the thoughts and steps in building these functions.
-
-## Description of Files
