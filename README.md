@@ -10,13 +10,12 @@ This analysis used a finacial dataset containing people's salary, stock informat
 
 ## Overview of Main Report
 
+To view the reports online,
+
+- [summary report](http://yyforyongyu.s3-website-us-east-1.amazonaws.com/projects/enron_fraud_summary.html)
+- [training report](http://yyforyongyu.s3-website-us-east-1.amazonaws.com/projects/enron_fraud_pipeline.html)
+
 The report is under directory documentations, named as ["training_main.html"](https://github.com/yyforyongyu/fraud-detection-enron/blob/master/documentations/training_main.html). For more compact and summarized reporting, please check ["documentation.html"](https://github.com/yyforyongyu/fraud-detection-enron/blob/master/documentations/documentation.html) in the same directory.
-
-To view the reports in repo, please use the following links,
-
-[summary](https://github.com/yyforyongyu/fraud-detection-enron/blob/master/main/documentation.ipynb)
-
-[detailed report](https://github.com/yyforyongyu/fraud-detection-enron/blob/master/main/training_main.ipynb)
 
 In this report, there are series of investigations performed to make a robust, strong final estimator to predict a person-of-interest(poi). These include,
 - an overview of the dataset.
