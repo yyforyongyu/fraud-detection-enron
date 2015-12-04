@@ -12,8 +12,8 @@ This analysis used a finacial dataset containing people's salary, stock informat
 
 To view the reports online,
 
-- [summary report](http://yyforyongyu.s3-website-us-east-1.amazonaws.com/projects/enron_fraud_summary.html)
-- [training report](http://yyforyongyu.s3-website-us-east-1.amazonaws.com/projects/enron_fraud_pipeline.html)
+- [summary report](http://bit.ly/1Qk30BQ)
+- [training report](http://bit.ly/1TphFuW)
 
 The report is under directory documentations, named as ["training_main.html"](https://github.com/yyforyongyu/fraud-detection-enron/blob/master/documentations/training_main.html). For more compact and summarized reporting, please check ["documentation.html"](https://github.com/yyforyongyu/fraud-detection-enron/blob/master/documentations/documentation.html) in the same directory.
 
